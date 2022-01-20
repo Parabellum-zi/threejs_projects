@@ -31,6 +31,7 @@ let renderer = reactive({});
   [113, 28.21, 100],
 ];*/
 
+// 以广州附近的点为示例
 const pointsArr = [
   [113.23, 23.16, 20],
   [113.21, 23.17, 20],
@@ -45,7 +46,6 @@ let CylinderMesh;
 let stripMesh;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
-let circles;
 onMounted(() => {
   initArcMap();
 });
@@ -71,7 +71,7 @@ function initArcMap() {
       // position: [106.81728807741148, 17.973344421207273, 3726356.6413883436],
       // position: [106.81728807741148, 17.973344421207273, 26356.6413883436],
       position: [113.23, 23.16, 2630.6413883436],
-      tilt: 0.902354973840445,
+      tilt: 1,
     },
   });
   view.ui.remove(["attribution", "zoom"]);
@@ -81,7 +81,6 @@ function initArcMap() {
   map.ground.opacity = 1;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   // map.ground.navigationConstraint = { type: "none" };
-
   registerRenderer();
 }
 
@@ -188,7 +187,7 @@ function registerRenderer() {
 }
 
 /**
- * 经纬度坐标点转换为渲染坐标系中的点坐标
+ * 经纬度坐标点转换为渲染坐标系（three js）中的点坐标
  * @param {number} longitude 经度
  * @param {number} latitude 纬度
  * @param {number} height 高度
@@ -209,7 +208,7 @@ function pointTransform(longitude, latitude, height) {
 }
 
 /**
- * 管线配置 （直径，颜色，透明度等）
+ * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
   const transparentConf = {
@@ -270,7 +269,7 @@ function creatPipe(conf) {
 }
 
 /**
- *  将经纬度坐标转为 渲染系坐标
+ * 将经纬度坐标转为 渲染系坐标后生成管线的渲染坐标点
  * @param pointsArr
  * @returns {CatmullRomCurve3}
  */
@@ -375,6 +374,10 @@ function resize() {
   });
 }
 
+/**
+ * 使用圆标记了管线的起始点
+ * @param Point
+ */
 function createCircle(Point) {
   let endPoint = pointTransform(...Point);
   let radius = scene.userData.viewResolution;
@@ -406,7 +409,6 @@ function createCircle(Point) {
   circleMesh.rotation.z = deltaZ;
   circleMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2); // 再沿X轴旋转90°
   // circleMesh.visible = false;
-  circles = circleMesh;
   scene.add(circleMesh);
 }
 </script>
