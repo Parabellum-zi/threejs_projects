@@ -14,16 +14,8 @@ const routes = [
     component: () => import("../components/Particle.vue"),
   },
   {
-    path: "/newPipe",
-    component: () => import("../components/newPipe.vue"),
-  },
-  {
     path: "/opacityPipe",
     component: () => import("../components/OpacityPipe.vue"),
-  },
-  {
-    path: "/encapsulate",
-    component: () => import("../components/Encapsulate.vue"),
   },
   {
     path: "/arcThree",
