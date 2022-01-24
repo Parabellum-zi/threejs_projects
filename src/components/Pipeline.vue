@@ -114,7 +114,7 @@ const animate = function (time) {
   time *= 0.001;
   //  关键  箭头贴图动画
   texture.offset.y = (time * 1) % 1; // 贴图运动速度
-  texture.offset.x += 0.001;
+  // texture.offset.x += 0.001;
   // 加载时场景旋转
   // const cameraSpeed = time * 0.3;
   // const cameraRadius = 5;
@@ -144,8 +144,8 @@ function drawCylinder() {
   ctx.font = "48px sans-serif";
   ctx.fillText("➡︎", 0, 0);
 
-  // texture = new THREE.CanvasTexture(ctx.canvas);
-  texture = new THREE.TextureLoader().load("images/southeast.jpg");
+  texture = new THREE.CanvasTexture(ctx.canvas);
+  // texture = new THREE.TextureLoader().load("images/southeast.jpg");
 
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;

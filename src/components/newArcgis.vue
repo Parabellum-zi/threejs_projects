@@ -88,9 +88,11 @@ function initArcMap() {
  *
  * @Description: 以下方法参照了
  * https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html
+ * https://developers.arcgis.com/javascript/latest/api-reference/esri-geometry-support-webMercatorUtils.html
  * https://blog.csdn.net/qq_37155408/article/details/115693043?spm=1001.2014.3001.5502
  * http://www.yanhuangxueyuan.com/Three.js_course/texture.html#2
  * https://www.cnblogs.com/xuejianxiyang/p/9719715.html
+ * https://threejs.org/docs/index.html#manual/en/introduction/Drawing-lines
  * @author parabellum
  * @date 2022/1/5
  * @type {{setup: myExternalRenderer.setup, render: myExternalRenderer.render}}
@@ -211,12 +213,12 @@ function pointTransform(longitude, latitude, height) {
  * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
-  const transparentConf = {
-    points: pointsArr,
-    color: 0x4488ff,
-    radius: 2,
-    opacity: 0.3,
-  };
+  // const transparentConf = {
+  //   points: pointsArr,
+  //   color: 0x4488ff,
+  //   radius: 2,
+  //   opacity: 0.3,
+  // };
 
   // 管道内流动的液体
   const conf = {
@@ -225,12 +227,12 @@ function initPipeConf() {
     radius: 1,
   };
   // 创建管道
-  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  scene.add(pipe0);
+  // scene.add(pipe0);
   scene.add(pipe1);
-  return { tubeTexture0, tubeTexture1 };
-  // return { tubeTexture1 };
+  // return { tubeTexture0, tubeTexture1 };
+  return { tubeTexture1 };
 }
 
 /**
@@ -346,7 +348,7 @@ function drawCylinder() {
 }
 
 function animate(time) {
-  time *= 0.0001;
+  time *= 0.0006;
   texture.offset.x = (time * 1) % 1; // 贴图运动速度
   // texture.offset.x += 0.001;
   // const elapsedTime = clock.getElapsedTime();

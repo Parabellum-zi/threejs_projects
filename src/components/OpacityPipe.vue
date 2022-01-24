@@ -129,7 +129,7 @@ function resize() {
 }
 
 function animate(time) {
-  time *= 0.0001;
+  time *= 0.0003;
   // console.log(time);
   texture.offset.x = (time * 1) % 1; // 贴图运动速度
   // texture.offset.x += 0.001;
@@ -150,7 +150,7 @@ function initPipeConf() {
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/southeast.jpg",
+    texture: "images/water_1.jpg",
     radius: 1,
   };
   // 创建管道
