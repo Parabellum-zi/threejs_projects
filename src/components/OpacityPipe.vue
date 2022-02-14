@@ -142,7 +142,7 @@ function resize() {
 }
 
 function animate(time) {
-  time *= 0.0001;
+  time *= 0.001;
   texture.offset.x = -(time * 1) % 1; // 贴图运动速度
   // texture.offset.x += 0.001;
   // resize();
@@ -155,7 +155,7 @@ function initPipeConf() {
   const transparentConf = {
     points: pointsArr,
     color: 0x4488ff,
-    radius: 2,
+    radius: 4,
     opacity: 0.3,
   };
 
@@ -164,7 +164,7 @@ function initPipeConf() {
     points: pointsArr,
     // texture: "images/water_1.jpg",
     texture: "images/allow1.jpg",
-    radius: 1,
+    radius: 2,
   };
   // 创建管道
   const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
@@ -175,35 +175,75 @@ function initPipeConf() {
 }
 
 /**
+ * 创建文本贴图
+ * @param text
+ * @returns {HTMLCanvasElement}
+ */
+function getTextCanvas(text) {
+  let width = 512,
+    height = 256;
+  let canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  let ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#C3C3C3";
+  ctx.fillRect(0, 0, width, height);
+  ctx.font = 50 + 'px "sans-serif';
+  ctx.fillStyle = "#2891FF";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, width / 2, height / 2);
+  return canvas;
+}
+
+/**
  *  创建管线
+ *  https://threejs.org/docs/index.html?q=TubeGeometry#api/en/geometries/TubeGeometry
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius);
+  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
+
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    texture = textureLoader.load(conf.texture);
+    // texture = textureLoader.load(conf.texture);   // 图片贴图
+    texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.x = 3;
+    texture.repeat.x = 10;
+    // texture.repeat.y = 2; // Y轴方向重复
+
+    // 图片贴图
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
-    material = new THREE.MeshPhongMaterial({
+    /*    material = new THREE.MeshPhongMaterial({
       map: texture,
       transparent: true,
+    });*/
+
+    //尝试使用文本贴图
+    material = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      // opacity: 0.1,
+      color: conf.color,
     });
   } else {
     material = new THREE.MeshPhongMaterial({
+      // map: texture,
       color: conf.color,
       transparent: true,
       opacity: conf.opacity,
+      depthWrite: false,
     });
-    material.depthWrite = false;
   }
   const mesh = new THREE.Mesh(geometry, material);
+  // mesh.rotation.z = Math.PI * 0.5; // 箭头方向
+  mesh.rotation.x = Math.PI * 0.5; //修改箭头在管壁的位置
+
   return { texture, mesh };
 }
 
