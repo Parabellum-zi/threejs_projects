@@ -135,7 +135,8 @@ function drawCylinder() {
   ctx.canvas.width = 64;
   ctx.canvas.height = 64;
   ctx.fillStyle = "rgb(105,181,201)";
-  ctx.fillRect(0, 0, 64, 64);
+  // ctx.fillRect(100, 0, 64, 64);
+  ctx.fillRect(0, 0, 64, 64); //管透明度
   ctx.translate(32, 32);
   ctx.rotate(Math.PI * 0.5);
   ctx.fillStyle = "rgb(0,255,255)";
@@ -149,14 +150,15 @@ function drawCylinder() {
 
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.x = 4;
-  texture.repeat.y = 9;
+  texture.repeat.x = 1; // x方向的箭头密度
+  texture.repeat.y = 4; // y方向的箭头密度
+  // texture.repeat.z = -400;
 
   // 创建管道
   const radiusTop = 1;
   const radiusBottom = 1;
   const height = 10; // 修改管线长度
-  const radiusSegments = 20;
+  const radiusSegments = 30; // 管壁平滑度， 越大越平滑
   const heightSegments = 200;
   const openEnded = true;
   const geometry = new THREE.CylinderBufferGeometry(
@@ -173,11 +175,14 @@ function drawCylinder() {
     depthWrite: false,
     depthTest: false,
     transparent: true,
+    opacity: 0.4,
   });
   CylinderMesh = new THREE.Mesh(geometry, material);
   scene.add(CylinderMesh);
-  CylinderMesh.rotation.z = Math.PI * 0.5;
+  CylinderMesh.rotation.z = Math.PI * 0.5; // 箭头方向
+  CylinderMesh.rotation.x = Math.PI * 0.6; //修改箭头在管壁的位置
 
+  // 管中心平面
   const stripGeo = new THREE.PlaneBufferGeometry(radiusTop * 1.7, height);
   const stripMat = new THREE.MeshBasicMaterial({
     map: texture,
@@ -190,6 +195,8 @@ function drawCylinder() {
   stripMesh = new THREE.Mesh(stripGeo, stripMat);
   scene.add(stripMesh);
   stripMesh.rotation.z = Math.PI * 0.5;
+  // stripMesh.rotation.y = Math.PI * 0.5;
+  stripMesh.rotation.x = Math.PI * 0.5;
 }
 </script>
 

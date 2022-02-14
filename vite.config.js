@@ -101,6 +101,7 @@ export default defineConfig({
         target:
           "http://10.194.171.72/server/rest/services/Hosted/XZWSJ3D/SceneServer",
         changeOrigin: true,
+
         rewrite: (path) => path.replace(/^\/server/, ""),
       },
     },

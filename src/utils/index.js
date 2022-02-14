@@ -146,7 +146,7 @@ let threeMethods = {
   },
   createPath: function (pointsArr) {
     pointsArr = pointsArr.map((point) => new THREE.Vector3(...point));
-    // 利用CatmullRomCurve3 创建三位路径，不过是平滑的三维样条曲线
+    // 利用CatmullRomCurve3 创建三维路径，不过是平滑的三维样条曲线
     return new THREE.CatmullRomCurve3(pointsArr);
   },
 };

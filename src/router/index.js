@@ -25,6 +25,10 @@ const routes = [
     path: "/newArcgis",
     component: () => import("../components/newArcgis.vue"),
   },
+  {
+    path: "/gzPipe",
+    component: () => import("../components/gzPipe.vue"),
+  },
 ];
 const router = createRouter({
   history: createWebHistory(),

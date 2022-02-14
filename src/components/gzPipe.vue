@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, onBeforeMount } from "vue";
 // import * as dat from "dat.gui";
 import * as THREE from "three";
 // import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -16,20 +16,47 @@ import Basemap from "@arcgis/core/Basemap";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
+import CoordTrans from "../utils/coordTrans";
 
 const sceneContainer = ref(null);
 let scene = reactive({});
 let camera = reactive({});
 let renderer = reactive({});
 // let orbitControls = reactive({});
+/*const pointsArr = [
+  [116.46, 39.92, 100],
+  [104.06, 30.67, 100],
+  [121.48, 31.22, 100],
+  [91.11, 29.97, 100],
+  [102.73, 25.04, 100],
+  [113.23, 23.16, 100],
+  [113, 28.21, 100],
+];*/
+
 // 以广州附近的点为示例
 const pointsArr = [
-  [113.23, 23.16, -20],
-  [113.21, 23.17, -20],
-  [113.22, 23.18, -20],
-  [113.23, 23.19, -20],
-  [113.23, 23.2, -20],
-  [113.23, 23.21, -20],
+  [113.23, 23.16, 20],
+  [113.21, 23.17, 20],
+  [113.22, 23.18, 20],
+  [113.23, 23.19, 20],
+  [113.23, 23.2, 20],
+  [113.23, 23.21, 20],
+];
+
+// let pointsArr = reactive([]);
+
+// 广州2000
+const gzPointsArr = [
+  [44213.1035000002, 227755.40550000034],
+  [44182.180499999784, 227759.49349999987],
+  [44152.449500000104, 227763.06450000033],
+  [44123.19049999956, 227767.5775000006],
+  [44093.29050000012, 227771.4564999994],
+  [44063.58249999955, 227775.63150000013],
+  [44033.69649999961, 227779.72149999999],
+  [44004.5083999997, 227783.76239999942],
+  [43994.73000000045, 227784.9759999998],
+  [43996.32100000046, 227807.4810000006],
 ];
 
 /*const gz = [
@@ -81,6 +108,9 @@ let CylinderMesh;
 let stripMesh;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
+/*onBeforeMount(() => {
+  changeGZ2web();
+});*/
 
 onMounted(() => {
   initArcMap();
@@ -113,9 +143,9 @@ function initArcMap() {
   view.ui.empty("top-left");
   window.view = view;
 
-  map.ground.opacity = 0.4;
+  map.ground.opacity = 1;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
-  map.ground.navigationConstraint = { type: "none" };
+  // map.ground.navigationConstraint = { type: "none" };
   registerRenderer();
 }
 
@@ -128,7 +158,6 @@ function initArcMap() {
  * http://www.yanhuangxueyuan.com/Three.js_course/texture.html#2
  * https://www.cnblogs.com/xuejianxiyang/p/9719715.html
  * https://threejs.org/docs/index.html#manual/en/introduction/Drawing-lines
- * https://threejs.org/docs/index.html?q=geometry#api/en/geometries/TubeGeometry
  * @author parabellum
  * @date 2022/1/5
  * @type {{setup: myExternalRenderer.setup, render: myExternalRenderer.render}}
@@ -186,7 +215,7 @@ let myExternalRenderer = {
     scene.userData.viewResolution = window.view.resolution;
     //  基础配置结束
 
-    initPipeConf();
+    // initPipeConf();
     createCircle(pointsArr[0]);
   },
   render: function (context) {
@@ -235,6 +264,8 @@ function pointTransform(longitude, latitude, height) {
     longitude,
     latitude
   );*/
+  // console.log(window.view.spatialReference);
+  console.log("pointXY", pointXY);
   // 先转换高度为0的点
   externalRenderers.renderCoordinateTransformAt(
     window.view,
@@ -242,6 +273,7 @@ function pointTransform(longitude, latitude, height) {
     window.view.spatialReference,
     transformation
   );
+  console.log(transformation[12], transformation[13], transformation[14]);
   return [transformation[12], transformation[13], transformation[14]];
 }
 
@@ -249,26 +281,25 @@ function pointTransform(longitude, latitude, height) {
  * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
-  // const transparentConf = {
-  //   points: pointsArr,
-  //   color: 0x4488ff,
-  //   radius: 2,
-  //   opacity: 0.3,
-  // };
+  const transparentConf = {
+    points: pointsArr,
+    color: 0x4488ff,
+    radius: 200,
+    opacity: 0.3,
+  };
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    // texture: "images/allow1.jpg",
     texture: "images/southeast.jpg",
-    radius: 10,
+    radius: 1,
   };
   // 创建管道
-  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  // scene.add(pipe0);
+  scene.add(pipe0);
   scene.add(pipe1);
-  // return { tubeTexture0, tubeTexture1 };
-  return { tubeTexture1 };
+  return { tubeTexture0, tubeTexture1 };
+  // return { tubeTexture1 };
 }
 
 /**
@@ -276,8 +307,7 @@ function initPipeConf() {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  console.log(path);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
+  const geometry = new THREE.TubeGeometry(path, 100, conf.radius);
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
@@ -385,8 +415,8 @@ function createPath(pointsArr) {
 }*/
 
 function animate(time) {
-  time *= 0.001;
-  texture.offset.x = (time * 1) % 1; // 贴图运动速度
+  // time *= 0.0006;
+  // texture.offset.x = (time * 1) % 1; // 贴图运动速度
   // texture.offset.x += 0.001;
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
@@ -419,7 +449,7 @@ function resize() {
  */
 function createCircle(Point) {
   let endPoint = pointTransform(...Point);
-  let radius = scene.userData.viewResolution;
+  let radius = scene.userData.viewResolution * 30;
   // 生成圆环
   const circleGeometry = new THREE.CircleGeometry(radius, 32);
   const ringMaterial = new THREE.MeshBasicMaterial({
@@ -449,6 +479,18 @@ function createCircle(Point) {
   circleMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2); // 再沿X轴旋转90°
   // circleMesh.visible = false;
   scene.add(circleMesh);
+}
+
+function changeGZ2web() {
+  let arr = [];
+  gzPointsArr.map((item) => {
+    let resCoords = CoordTrans.GaussTransform.GZ2000XYtoG2000BL(
+      item[0],
+      item[1]
+    );
+    arr.push([resCoords.L, resCoords.B], 200);
+  });
+  pointsArr = arr;
 }
 </script>
 

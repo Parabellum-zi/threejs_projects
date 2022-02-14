@@ -25,6 +25,18 @@ const pointsArr = [
   [20, 40, 0],
 ];
 
+// 广州附近经纬度转换后的坐标
+/*
+let pointsArr = [
+  [-2312953.230182137, 5388730.020037582, 2508530.01632127],
+  [-2310899.4861760437, 5389134.59590233, 2509553.4640028947],
+  [-2311667.3102313625, 5388328.582948268, 2510576.8352391464],
+  [-2312434.8528883145, 5387522.302022157, 2511600.1299988576],
+  [-2312261.919568433, 5387119.401107366, 2512623.3482508515],
+  [-2312088.915813026, 5386716.336091534, 2513646.4899639636],
+];
+*/
+
 /*const pointsArr = [
   [116.46, 39.92, 200],
   [104.06, 30.67, 200],
@@ -60,6 +72,7 @@ function initCamera() {
     1000
   ); // 视野角度 , 宽高比， 近截面（near）和远截面（far）
   camera.position.set(-80, 30, 100); // 设置相机位置
+  // camera.position.set(-3000000, 6000000, 3000000); // 设置相机位置
   // camera.position.z = 3;
   scene.add(camera);
 }
@@ -129,9 +142,8 @@ function resize() {
 }
 
 function animate(time) {
-  time *= 0.0003;
-  // console.log(time);
-  texture.offset.x = (time * 1) % 1; // 贴图运动速度
+  time *= 0.0001;
+  texture.offset.x = -(time * 1) % 1; // 贴图运动速度
   // texture.offset.x += 0.001;
   // resize();
   // const elapsedTime = clock.getElapsedTime();
@@ -150,7 +162,8 @@ function initPipeConf() {
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/water_1.jpg",
+    // texture: "images/water_1.jpg",
+    texture: "images/allow1.jpg",
     radius: 1,
   };
   // 创建管道
@@ -177,7 +190,6 @@ function creatPipe(conf) {
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
     texture.repeat.x = 3;
-
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     material = new THREE.MeshPhongMaterial({
       map: texture,
