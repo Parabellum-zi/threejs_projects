@@ -77,8 +77,6 @@ const pointsArr = [
 ];*/
 
 let texture;
-let CylinderMesh;
-let stripMesh;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
 
@@ -320,74 +318,9 @@ function createPath(pointsArr) {
   return new THREE.CatmullRomCurve3(points);
 }
 
-/*function drawCylinder() {
-  // 创建 箭头的 canvas
-  const ctx = document.createElement("canvas").getContext("2d");
-  ctx.canvas.width = 64;
-  ctx.canvas.height = 64;
-  ctx.fillStyle = "rgb(105,181,201)";
-  ctx.fillRect(0, 0, 64, 64);
-  ctx.translate(32, 32);
-  ctx.rotate(Math.PI * 0.5);
-  ctx.fillStyle = "rgb(0,255,255)";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "48px sans-serif";
-  ctx.fillText("➡︎", 0, 0);
-
-  // texture = new THREE.CanvasTexture(ctx.canvas);
-  texture = new THREE.TextureLoader().load("images/southeast.jpg");
-
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.x = 4;
-  texture.repeat.y = 9;
-
-  // 创建管道
-  const radiusTop = 1;
-  const radiusBottom = 1;
-  // const height = 20000000; // 修改管线长度
-  const height = 20000000; // 修改管线长度
-  const radiusSegments = 20;
-  const heightSegments = 2;
-  const openEnded = true;
-  const geometry = new THREE.CylinderBufferGeometry(
-    radiusTop,
-    radiusBottom,
-    height,
-    radiusSegments,
-    heightSegments,
-    openEnded
-  );
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    side: THREE.DoubleSide,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true,
-  });
-  CylinderMesh = new THREE.Mesh(geometry, material);
-  scene.add(CylinderMesh);
-  CylinderMesh.rotation.z = Math.PI * 0.5;
-
-  const stripGeo = new THREE.PlaneBufferGeometry(radiusTop * 1.7, height);
-  const stripMat = new THREE.MeshBasicMaterial({
-    map: texture,
-    opacity: 0.5,
-    side: THREE.DoubleSide,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true,
-  });
-  stripMesh = new THREE.Mesh(stripGeo, stripMat);
-  scene.add(stripMesh);
-  stripMesh.rotation.z = Math.PI * 0.5;
-}*/
-
 function animate(time) {
   time *= 0.001;
   texture.offset.x = (time * 1) % 1; // 贴图运动速度
-  // texture.offset.x += 0.001;
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);

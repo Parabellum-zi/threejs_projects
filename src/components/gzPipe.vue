@@ -23,15 +23,6 @@ let scene = reactive({});
 let camera = reactive({});
 let renderer = reactive({});
 // let orbitControls = reactive({});
-/*const pointsArr = [
-  [116.46, 39.92, 100],
-  [104.06, 30.67, 100],
-  [121.48, 31.22, 100],
-  [91.11, 29.97, 100],
-  [102.73, 25.04, 100],
-  [113.23, 23.16, 100],
-  [113, 28.21, 100],
-];*/
 
 // 以广州附近的点为示例
 const pointsArr = [
@@ -104,8 +95,6 @@ const gzPointsArr = [
 ];*/
 
 let texture;
-let CylinderMesh;
-let stripMesh;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
 /*onBeforeMount(() => {
@@ -123,8 +112,8 @@ function initArcMap() {
   const basemap = new Basemap({
     baseLayers: [
       new TileLayer({
-        url: "http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
-        // url: "http://10.194.69.43/server/rest/services/GDBasemap/MapServer",
+        // url: "http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
+        url: "http://10.194.69.43/server/rest/services/GDBasemap/MapServer",
         title: "Basemap",
       }),
     ],
@@ -138,6 +127,7 @@ function initArcMap() {
       position: [113.23, 23.16, 2630.6413883436],
       tilt: 1,
     },
+    viewingMode: "local",
   });
   view.ui.remove(["attribution", "zoom"]);
   view.ui.empty("top-left");
@@ -216,7 +206,8 @@ let myExternalRenderer = {
     //  基础配置结束
 
     // initPipeConf();
-    createCircle(pointsArr[0]);
+    // createCircle(pointsArr[0]);
+    createCircle(gzPointsArr[0]);
   },
   render: function (context) {
     // 更新相机参数
@@ -265,7 +256,6 @@ function pointTransform(longitude, latitude, height) {
     latitude
   );*/
   // console.log(window.view.spatialReference);
-  console.log("pointXY", pointXY);
   // 先转换高度为0的点
   externalRenderers.renderCoordinateTransformAt(
     window.view,
@@ -273,8 +263,23 @@ function pointTransform(longitude, latitude, height) {
     window.view.spatialReference,
     transformation
   );
-  console.log(transformation[12], transformation[13], transformation[14]);
+  console.log("pointXY....", pointXY);
+  // console.log(transformation[12], transformation[13], transformation[14]);
   return [transformation[12], transformation[13], transformation[14]];
+}
+
+function coordinateTriples(longitude, latitude, height) {
+  let renderCoordinates = new Array(6);
+
+  externalRenderers.toRenderCoordinates(
+    window.view,
+    [longitude, latitude, height],
+    0,
+    window.view.spatialReference,
+    renderCoordinates,
+    0,
+    2
+  );
 }
 
 /**
@@ -350,70 +355,6 @@ function createPath(pointsArr) {
   return new THREE.CatmullRomCurve3(points);
 }
 
-/*function drawCylinder() {
-  // 创建 箭头的 canvas
-  const ctx = document.createElement("canvas").getContext("2d");
-  ctx.canvas.width = 64;
-  ctx.canvas.height = 64;
-  ctx.fillStyle = "rgb(105,181,201)";
-  ctx.fillRect(0, 0, 64, 64);
-  ctx.translate(32, 32);
-  ctx.rotate(Math.PI * 0.5);
-  ctx.fillStyle = "rgb(0,255,255)";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "48px sans-serif";
-  ctx.fillText("➡︎", 0, 0);
-
-  // texture = new THREE.CanvasTexture(ctx.canvas);
-  texture = new THREE.TextureLoader().load("images/southeast.jpg");
-
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.x = 4;
-  texture.repeat.y = 9;
-
-  // 创建管道
-  const radiusTop = 1;
-  const radiusBottom = 1;
-  // const height = 20000000; // 修改管线长度
-  const height = 20000000; // 修改管线长度
-  const radiusSegments = 20;
-  const heightSegments = 2;
-  const openEnded = true;
-  const geometry = new THREE.CylinderBufferGeometry(
-    radiusTop,
-    radiusBottom,
-    height,
-    radiusSegments,
-    heightSegments,
-    openEnded
-  );
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    side: THREE.DoubleSide,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true,
-  });
-  CylinderMesh = new THREE.Mesh(geometry, material);
-  scene.add(CylinderMesh);
-  CylinderMesh.rotation.z = Math.PI * 0.5;
-
-  const stripGeo = new THREE.PlaneBufferGeometry(radiusTop * 1.7, height);
-  const stripMat = new THREE.MeshBasicMaterial({
-    map: texture,
-    opacity: 0.5,
-    side: THREE.DoubleSide,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true,
-  });
-  stripMesh = new THREE.Mesh(stripGeo, stripMat);
-  scene.add(stripMesh);
-  stripMesh.rotation.z = Math.PI * 0.5;
-}*/
-
 function animate(time) {
   // time *= 0.0006;
   // texture.offset.x = (time * 1) % 1; // 贴图运动速度
@@ -449,6 +390,7 @@ function resize() {
  */
 function createCircle(Point) {
   let endPoint = pointTransform(...Point);
+  // let endPoint = coordinateTriples(...Point);
   let radius = scene.userData.viewResolution * 30;
   // 生成圆环
   const circleGeometry = new THREE.CircleGeometry(radius, 32);
