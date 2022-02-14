@@ -202,7 +202,7 @@ function getTextCanvas(text) {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
+  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 15);
 
   const textureLoader = new THREE.TextureLoader();
   let material;
