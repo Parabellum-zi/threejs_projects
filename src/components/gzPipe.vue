@@ -296,7 +296,7 @@ function creatPipe(conf) {
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.x = 3000;
+    texture.repeat.x = 30;
     texture.repeat.y = 3;
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     // material = new THREE.MeshPhongMaterial({
@@ -338,6 +338,8 @@ function animate(time) {
   time *= 0.01;
   // console.log(texture);
   texture.offset.x = -(time * 1) % 1; // 贴图运动速度
+  texture.needsUpdate = true;
+
   // // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
@@ -432,7 +434,7 @@ function getYsdData() {
       data.features.map((item) => {
         arr.push([item.geometry.x, item.geometry.y, -1.5]);
       });
-      arr = arr.slice(0, 20);
+      // arr = arr.slice(0, 20);
       pointsArr = arr;
       // console.log(arr.slice(0, 20));
       // pointsArr = arr.slice(0, 20);

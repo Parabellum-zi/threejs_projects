@@ -16,6 +16,7 @@ import Basemap from "@arcgis/core/Basemap";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
+import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 
 const sceneContainer = ref(null);
 let scene = reactive({});
@@ -250,11 +251,12 @@ function initPipeConf() {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
+  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20, false);
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    texture = textureLoader.load(conf.texture);
+    // texture = textureLoader.load(conf.texture);
+    texture = textureLoader.load("images/allow3.png");
     // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
 
@@ -274,13 +276,18 @@ function creatPipe(conf) {
 
     //尝试使用文本贴图
     material = new THREE.MeshBasicMaterial({
-      map: texture,
+      /*map: texture,
       transparent: true,
       // opacity: 0.1,
-      color: conf.color,
+      color: conf.color,*/
+      color: 0x85a9a9,
+      side: 200,
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+      opacity: 1,
     });
   } else {
-    console.log("sss");
     material = new THREE.MeshPhongMaterial({
       color: conf.color,
       transparent: true,
@@ -309,6 +316,8 @@ function createPath(pointsArr) {
 function animate(time) {
   time *= 0.001;
   texture.offset.x = (time * 1) % 1; // 贴图运动速度
+  texture.needsUpdate = true;
+
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);

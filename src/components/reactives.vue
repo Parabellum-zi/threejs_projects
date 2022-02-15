@@ -166,7 +166,7 @@ function initMap() {
         //     transformation[14]
         //   )
         // );
-
+        console.log(item[0], item[1]);
         var renderPos = [0, 0, 0];
         externalRenderers.toRenderCoordinates(
           this.view,
@@ -192,7 +192,7 @@ function initMap() {
        * closed 收尾是否相连 封闭
        * @type {TubeGeometry}
        */
-      let tubeGeometry = new THREE.TubeGeometry(curve, 20, 100, 8, false);
+      let tubeGeometry = new THREE.TubeGeometry(curve, 100, 100, 8, false);
       var textureLoader = new THREE.TextureLoader();
       //设置纹理贴图
       this.map = textureLoader.load("images/allow3.png");
@@ -201,8 +201,8 @@ function initMap() {
       this.map.repeat.set(20, 4);
 
       let material = new THREE.MeshBasicMaterial({
-        // color: 0x85a9a9,
-        // side: 200,
+        color: 0x85a9a9,
+        side: 200,
         map: this.map,
         transparent: true,
         depthWrite: false,
@@ -233,7 +233,7 @@ function initMap() {
       // 投影矩阵可以直接复制
       this.camera.projectionMatrix.fromArray(cam.projectionMatrix);
       // // 更新几何体
-      this.map.offset.x += 0.02;
+      this.map.offset.x += 0.009;
       this.map.needsUpdate = true;
       // 绘制场景
       this.renderer.state.reset();
