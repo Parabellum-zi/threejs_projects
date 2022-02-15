@@ -19,7 +19,7 @@ const routes = [
   },
   {
     path: "/arcThree",
-    component: () => import("../components/webGLLoadServer.vue"),
+    component: () => import("../components/reactives.vue"),
   },
   {
     path: "/newArcgis",
@@ -28,6 +28,10 @@ const routes = [
   {
     path: "/gzPipe",
     component: () => import("../components/gzPipe.vue"),
+  },
+  {
+    path: "/reactives",
+    component: () => import("../components/reactives.vue"),
   },
 ];
 const router = createRouter({

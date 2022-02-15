@@ -24,6 +24,45 @@ const pointsArr = [
   [70, 30, 0],
   [20, 40, 0],
 ];
+/*
+const pointsArr = [
+  [113.33200717035561, 23.123868298337488, 20],
+  [113.33193471797097, 23.12389375632453, 20],
+  [113.33187953734473, 23.123770177383715, 20],
+  [113.33185832872239, 23.123481594596804, 20],
+  [113.33169725322034, 23.12263653054203, 20],
+  [113.3319550555247, 23.122622333204134, 20],
+  [113.33223498079862, 23.12261203308015, 20],
+  [113.33252478587465, 23.122587171140765, 20],
+  [113.3327903879739, 23.122589532743206, 20],
+  [113.33300847557683, 23.12258577162446, 20],
+  [113.33322488273681, 23.122574663006855, 20],
+  [113.33325226582443, 23.122530909194133, 20],
+  [113.3332644228248, 23.122309951803306, 20],
+  [113.33325917485871, 23.12204813100512, 20],
+  [113.3332602085735, 23.121777588490747, 20],
+  [113.33326582366728, 23.12153099095903, 20],
+  [113.33326443507165, 23.12145409799167, 20],
+  [113.33327543328967, 23.121325676116662, 20],
+  [113.33347832991453, 23.12131401426879, 20],
+  [113.33376506377276, 23.121288358975708, 20],
+  [113.33404731471101, 23.121263662071076, 20],
+  [113.33428435196257, 23.12123652778491, 20],
+  [113.33444257785685, 23.12108209002754, 20],
+  [113.33444245620335, 23.12082534299868, 20],
+  [113.33443698584692, 23.12054420347713, 20],
+  [113.33443361968887, 23.12031888058382, 20],
+  [113.33443122026354, 23.120002662765, 20],
+  [113.33442693344298, 23.11972456728798, 20],
+  [113.3344232242018, 23.119552454790348, 20],
+  [113.33453681602084, 23.119526738111013, 20],
+  [113.33475147734951, 23.119489872823163, 20],
+  [113.33512287057088, 23.11944253470876, 20],
+  [113.33565136182612, 23.11937221691412, 20],
+  [113.33648041097598, 23.118473519373225, 20],
+  [113.33648800266937, 23.118457139717187, 20],
+];
+*/
 
 let texture;
 
@@ -51,6 +90,7 @@ function initCamera() {
     1000
   ); // 视野角度 , 宽高比， 近截面（near）和远截面（far）
   camera.position.set(-80, 30, 100); // 设置相机位置
+  // camera.position.set(113, 23, 100); // 设置相机位置
   // camera.position.set(-3000000, 6000000, 3000000); // 设置相机位置
   // camera.position.z = 3;
   scene.add(camera);
@@ -122,6 +162,7 @@ function resize() {
 
 function animate(time) {
   time *= 0.001;
+  // console.log(texture);
   texture.offset.x = -(time * 1) % 1; // 贴图运动速度
   // texture.offset.x += 0.001;
   // resize();
@@ -141,16 +182,16 @@ function initPipeConf() {
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/allow1.jpg",
-    radius: 2,
+    texture: "images/allow3.png",
+    radius: 1,
   };
   // 创建管道
-  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  scene.add(pipe0);
+  // scene.add(pipe0);
   scene.add(pipe1);
-  // return { tubeTexture1 };
-  return { tubeTexture0, tubeTexture1 };
+  return { tubeTexture1 };
+  // return { tubeTexture0, tubeTexture1 };
 }
 
 /**
@@ -165,10 +206,11 @@ function getTextCanvas(text) {
   canvas.width = width;
   canvas.height = height;
   let ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#C3C3C3";
+  // ctx.fillStyle = "rgba(76,180,206,0.1)";
+  ctx.fillStyle = "rgba(241,11,11,0.2)";
   ctx.fillRect(0, 0, width, height);
-  ctx.font = 50 + 'px "sans-serif';
-  ctx.fillStyle = "#2891FF";
+  ctx.font = 500 + 'px "sans-serif';
+  ctx.fillStyle = "rgba(40,145,255,1)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, width / 2, height / 2);
@@ -186,15 +228,15 @@ function creatPipe(conf) {
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    // texture = textureLoader.load(conf.texture);   // 图片贴图
-    texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
+    texture = textureLoader.load(conf.texture); // 图片贴图
+    // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
     texture.repeat.x = 10;
-    // texture.repeat.y = 2; // Y轴方向重复
+    texture.repeat.y = 2; // Y轴方向重复
 
     // 图片贴图
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture

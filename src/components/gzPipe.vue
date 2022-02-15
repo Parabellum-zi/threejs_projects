@@ -14,6 +14,7 @@ import Map from "@arcgis/core/Map";
 import SceneView from "@arcgis/core/views/SceneView";
 import Basemap from "@arcgis/core/Basemap";
 import TileLayer from "@arcgis/core/layers/TileLayer";
+import SceneLayer from "@arcgis/core/layers/SceneLayer";
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
 import CoordTrans from "../utils/coordTrans";
@@ -23,9 +24,9 @@ let camera = reactive({});
 let renderer = reactive({});
 // let orbitControls = reactive({});
 
-// let pointsArr = reactive([]);
+let pointsArr = reactive([]);
 // 周大福雨水管溯源路径
-const pointsArr = [
+/*const pointsArr = [
   [113.33200717035561, 23.123868298337488, 20],
   [113.33193471797097, 23.12389375632453, 20],
   [113.33187953734473, 23.123770177383715, 20],
@@ -61,16 +62,16 @@ const pointsArr = [
   [113.33565136182612, 23.11937221691412, 20],
   [113.33648041097598, 23.118473519373225, 20],
   [113.33648800266937, 23.118457139717187, 20],
-];
+];*/
 let texture;
-
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
-/*onBeforeMount(() => {
-  changeGZ2web();
-});*/
+onBeforeMount(() => {
+  getYsdData();
+});
 onMounted(() => {
   initArcMap();
+  // initPointLight();
 });
 /**
  * 初始化ArcGIS 相关
@@ -80,7 +81,8 @@ function initArcMap() {
     baseLayers: [
       new TileLayer({
         // url: "http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
-        url: "http://10.194.69.43/server/rest/services/GDBasemap/MapServer",
+        // url: "http://10.194.69.43/server/rest/services/GDBasemap/MapServer",
+        url: "http://10.194.150.155:8010/ServiceAccess/MapService-T/2017年卫星影像地图_广州2000坐标系_/19f3612a2b44e98baae1f40713a085b6",
         title: "Basemap",
       }),
     ],
@@ -95,24 +97,38 @@ function initArcMap() {
     let center = view.extent.center;
     center.x = 43698.65155595513;
     center.y = 228054.33760938543;
-    view.goTo(
-      {
-        center,
-        tilt: 0,
-        zoom: 15,
-      },
-      {
-        speedFactor: 2,
-      }
-    );
+    view.goTo({
+      center,
+      tilt: 0,
+      zoom: 15,
+    });
   });
   view.ui.remove(["attribution", "zoom"]);
   view.ui.empty("top-left");
   window.view = view;
-  map.ground.opacity = 1;
+  map.ground.opacity = 0.5;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
-  // map.ground.navigationConstraint = { type: "none" };
+  map.ground.navigationConstraint = { type: "none" };
+  // 图层
+  let sceneLayer = new SceneLayer({
+    id: "sceneLayer",
+    // url: 'https://gis.swj.gz.gov.cn/server/rest/services/Hosted/PQWSG20220113/SceneServer', // 域名
+    // url: "http://10.194.171.119/server/rest/services/Hosted/DWDPWSJCS20220122/SceneServer", // ip
+    url: "http://10.194.171.119/server/rest/services/eslpk/XFWWSGX20211215/SceneServer",
+  });
+  map.add(sceneLayer);
+
   registerRenderer();
+}
+
+function initPointLight() {
+  const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
+  const pointLight = new THREE.PointLight(0xffffff, 1);
+  pointLight.position.x = 2;
+  pointLight.position.y = 3;
+  pointLight.position.z = 4;
+  scene.add(ambientLight);
+  scene.add(pointLight);
 }
 /**
  *
@@ -176,7 +192,7 @@ let myExternalRenderer = {
     scene.userData.viewResolution = window.view.resolution;
     //  基础配置结束
     initPipeConf();
-    // createCircle(pointsArr[0]);
+    createCircle(pointsArr[0]);
   },
   render: function (context) {
     // 更新相机参数
@@ -218,20 +234,20 @@ function pointTransform(longitude, latitude, height) {
   // 将经纬度坐标转换为xy值
   // let pointXY = webMercatorUtils.lngLatToXY(longitude, latitude);
   // 将广州2000坐标转换为xy值
-  let { X, Y } = CoordTrans.GaussTransform.G2000BLtoGZ2000XYZ(
+  /*  let { X, Y } = CoordTrans.GaussTransform.G2000BLtoGZ2000XYZ(
     latitude,
     longitude
   );
   let positions = {
     x: X - 1220,
     y: Y - 340,
-  };
-  console.log(window.view.spatialReference);
+  };*/
   // 先转换高度为0的点
   externalRenderers.renderCoordinateTransformAt(
     window.view,
     // [pointXY[0], pointXY[1], height], // 坐标在地面上的点[x值, y值, 高度值]
-    [positions.x, positions.y, height], // 坐标在地面上的点[x值, y值, 高度值]
+    // [positions.x, positions.y, height], // 坐标在地面上的点[x值, y值, 高度值]
+    [longitude, latitude, height], // 坐标在地面上的点[x值, y值, 高度值]
     window.view.spatialReference,
     transformation
   );
@@ -250,7 +266,8 @@ function initPipeConf() {
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/southeast.jpg",
+    texture: "images/allow3.png",
+    // radius: 1,
     radius: 1,
   };
   // 创建管道
@@ -266,19 +283,21 @@ function initPipeConf() {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 15);
+  console.log(path);
+  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    // texture = textureLoader.load(conf.texture);
-    texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
+    texture = textureLoader.load(conf.texture);
+    // texture = new THREE.CanvasTexture(getTextCanvas("➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.x = 30;
+    texture.repeat.x = 3000;
+    texture.repeat.y = 3;
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     // material = new THREE.MeshPhongMaterial({
     //   map: texture,
@@ -317,9 +336,9 @@ function createPath(pointsArr) {
 }
 function animate(time) {
   time *= 0.01;
+  // console.log(texture);
   texture.offset.x = -(time * 1) % 1; // 贴图运动速度
-  // texture.offset.x += 0.001;
-  // const elapsedTime = clock.getElapsedTime();
+  // // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
@@ -346,7 +365,7 @@ function resize() {
  */
 function createCircle(Point) {
   let endPoint = pointTransform(...Point);
-  let radius = scene.userData.viewResolution * 0.5;
+  let radius = scene.userData.viewResolution * 0.001;
   // 生成圆环
   const circleGeometry = new THREE.CircleGeometry(radius, 32);
   const ringMaterial = new THREE.MeshBasicMaterial({
@@ -390,14 +409,37 @@ function getTextCanvas(text) {
   canvas.width = width;
   canvas.height = height;
   let ctx = canvas.getContext("2d");
-  ctx.fillStyle = "rgb(105,181,201)";
+  // ctx.fillStyle = "rgb(105,181,201)";
+  // ctx.fillStyle = "rgba(76,180,206,0.1)";
+  ctx.fillStyle = "rgba(222,54,54,0.6)";
   ctx.fillRect(0, 0, width, height); //管透明度
-  ctx.font = 50 + 'px "sans-serif';
-  ctx.fillStyle = "#2891FF";
+  ctx.font = 500 + 'px "sans-serif';
+  ctx.fillStyle = "rgb(255,255,255)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, width / 2, height / 2);
   return canvas;
+}
+
+function getYsdData() {
+  let arr = [];
+  fetch("static/json/wsd11.json")
+    .then((res) => res.json())
+    .then((data) => {
+      data.features = data.features.sort(
+        (a, b) => b.attributes.sxbh - a.attributes.sxbh
+      );
+      data.features.map((item) => {
+        arr.push([item.geometry.x, item.geometry.y, -1.5]);
+      });
+      arr = arr.slice(0, 20);
+      pointsArr = arr;
+      // console.log(arr.slice(0, 20));
+      // pointsArr = arr.slice(0, 20);
+    })
+    .catch((e) => {
+      console.log(e.message);
+    });
 }
 </script>
 

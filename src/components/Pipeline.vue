@@ -134,9 +134,9 @@ function drawCylinder() {
   const ctx = document.createElement("canvas").getContext("2d");
   ctx.canvas.width = 64;
   ctx.canvas.height = 64;
-  ctx.fillStyle = "rgb(105,181,201)";
+  ctx.fillStyle = "rgba(105,181,201,0.1)";
   // ctx.fillRect(100, 0, 64, 64);
-  ctx.fillRect(0, 0, 64, 64); //管透明度
+  ctx.fillRect(0, 0, 0, 0); //管透明度
   ctx.translate(32, 32);
   ctx.rotate(Math.PI * 0.5);
   ctx.fillStyle = "rgb(0,255,255)";
@@ -150,7 +150,7 @@ function drawCylinder() {
 
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.x = 1; // x方向的箭头密度
+  texture.repeat.x = 4; // x方向的箭头密度
   texture.repeat.y = 4; // y方向的箭头密度
   // texture.repeat.z = -400;
 

@@ -24,12 +24,31 @@ let renderer = reactive({});
 // let orbitControls = reactive({});
 // 以广州附近的点为示例
 const pointsArr = [
-  [113.23, 23.16, 20],
-  [113.21, 23.17, 20],
-  [113.22, 23.18, 20],
-  [113.23, 23.19, 20],
-  [113.23, 23.2, 20],
-  [113.23, 23.21, 20],
+  // [113.23, 23.16, 20],
+  // [113.21, 23.17, 20],
+  // [113.22, 23.18, 20],
+  // [113.23, 23.19, 20],
+  // [113.23, 23.2, 20],
+  // [113.23, 23.21, 20],
+  [115.80895340787583, 30.92933111293343, 20],
+  [115.81947621477968, 30.936026430486265, 20],
+  [115.85073577332635, 30.952730603143078, 20],
+  [115.86830705038578, 30.964969701156637, 20],
+  [115.87796494895557, 30.970050440481813, 20],
+  [115.88263291871093, 30.97587476869184, 20],
+  [115.88153549018487, 30.97619308639916, 20],
+  [115.88860467181571, 30.985581605596618, 20],
+  [115.89039457558401, 30.99614115304192, 20],
+  [115.89037581420371, 30.99986573852132, 20],
+  [115.88982453627196, 31.003621647335926, 20],
+  [115.88822886767906, 30.999078415194415, 20],
+  [115.88681216877917, 30.997464365151867, 20],
+  [115.88286139825868, 30.99686255666582, 20],
+  [115.87841763117079, 30.999826971071514, 20],
+  [115.86308179931808, 30.99584156461405, 20],
+  [115.85510630972263, 30.993171784031908, 20],
+  [115.86174910808289, 30.993473404196706, 20],
+  [115.86231959908358, 30.99068362090549, 20],
 ];
 
 let texture;
@@ -59,7 +78,8 @@ function initArcMap() {
     container: sceneContainer.value,
     map: map,
     camera: {
-      position: [113.23, 23.16, 2630.6413883436],
+      // position: [113.23, 23.16, 2630.6413883436],
+      position: [115.9210717080402, 30.896913111159947, 13154.641086300715],
       tilt: 1,
     },
   });
@@ -203,26 +223,26 @@ function pointTransform(longitude, latitude, height) {
  * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
-  const transparentConf = {
+  /*const transparentConf = {
     points: pointsArr,
     color: 0x9988ff,
     radius: 2,
     opacity: 0.3,
-  };
+  };*/
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
     // texture: new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")), // 文本贴图
-    texture: "images/southeast.jpg",
+    texture: "images/allow3.png",
     radius: 10,
   };
   // 创建管道
-  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  scene.add(pipe0);
+  // scene.add(pipe0);
   scene.add(pipe1);
-  return { tubeTexture0, tubeTexture1 };
-  // return { tubeTexture1 };
+  // return { tubeTexture0, tubeTexture1 };
+  return { tubeTexture1 };
 }
 
 /**
@@ -231,12 +251,11 @@ function initPipeConf() {
 function creatPipe(conf) {
   const path = createPath(conf.points);
   const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
-  // const textureLoader = new THREE.TextureLoader();
+  const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    console.log("111111111111");
-    // texture = textureLoader.load(conf.texture);\
-    texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
+    texture = textureLoader.load(conf.texture);
+    // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
 
     // 设置阵列模式为 RepeatWrapping
@@ -244,9 +263,9 @@ function creatPipe(conf) {
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.x = 10;
-    texture.repeat.y = 20; // Y轴方向重复
-
+    // texture.repeat.x = 10;
+    // texture.repeat.y = 20; // Y轴方向重复
+    texture.repeat.set(20, 4);
     // // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     // material = new THREE.MeshPhongMaterial({
     //   map: texture,
