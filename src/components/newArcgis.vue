@@ -24,57 +24,13 @@ let renderer = reactive({});
 // let orbitControls = reactive({});
 // 以广州附近的点为示例
 const pointsArr = [
-  [113.23, 23.16, -20],
-  [113.21, 23.17, -20],
-  [113.22, 23.18, -20],
-  [113.23, 23.19, -20],
-  [113.23, 23.2, -20],
-  [113.23, 23.21, -20],
+  [113.23, 23.16, 20],
+  [113.21, 23.17, 20],
+  [113.22, 23.18, 20],
+  [113.23, 23.19, 20],
+  [113.23, 23.2, 20],
+  [113.23, 23.21, 20],
 ];
-
-/*const gz = [
-  [44213.1035000002, 227755.40550000034],
-  [44182.180499999784, 227759.49349999987],
-  [44152.449500000104, 227763.06450000033],
-  [44123.19049999956, 227767.5775000006],
-  [44093.29050000012, 227771.4564999994],
-  [44063.58249999955, 227775.63150000013],
-  [44033.69649999961, 227779.72149999999],
-  [44004.5083999997, 227783.76239999942],
-  [43994.73000000045, 227784.9759999998],
-  [43996.32100000046, 227807.4810000006],
-  [43996.74799999967, 227826.48900000006],
-  [43997.150999999605, 227857.31799999997],
-  [43997.42200000025, 227892.32200000063],
-  [43997.77099999972, 227917.33000000007],
-  [43998.33899999969, 227948.39800000004],
-  [43998.3339999998, 227976.8629999999],
-  [43982.43800000008, 227993.72499999963],
-  [43958.01999999955, 227996.55000000075],
-  [43929.23199999984, 227998.9969999995],
-  [43899.987999999896, 228001.5390000008],
-  [43879.294999999925, 228002.61500000022],
-  [43878.17899999954, 228016.82200000063],
-  [43878.32400000002, 228025.33699999936],
-  [43877.762000000104, 228052.6339999996],
-  [43877.6679999996, 228082.58699999936],
-  [43878.21399999969, 228111.58100000024],
-  [43876.98300000001, 228136.03199999966],
-  [43874.191999999806, 228140.84699999914],
-  [43852.12200000044, 228141.84300000034],
-  [43829.88100000005, 228142.01999999955],
-  [43802.794999999925, 228141.46199999936],
-  [43773.242999999784, 228143.88499999978],
-  [43744.69900000002, 228144.70099999942],
-  [43718.411999999546, 228145.9690000005],
-  [43734.86899999995, 228239.7229999993],
-  [43737.042000000365, 228271.6989999991],
-  [43742.67300000042, 228285.44600000046],
-  [43754.14400000032, 228309.6860000007],
-  [43764.37700000033, 228334.3239999991],
-  [43777.43800000008, 228329.65399999917],
-  [43764.37700000033, 228334.3239999991],
-];*/
 
 let texture;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
@@ -111,9 +67,9 @@ function initArcMap() {
   view.ui.empty("top-left");
   window.view = view;
 
-  map.ground.opacity = 0.4;
+  map.ground.opacity = 1;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
-  map.ground.navigationConstraint = { type: "none" };
+  // map.ground.navigationConstraint = { type: "none" };
   registerRenderer();
 }
 
@@ -247,26 +203,26 @@ function pointTransform(longitude, latitude, height) {
  * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
-  // const transparentConf = {
-  //   points: pointsArr,
-  //   color: 0x4488ff,
-  //   radius: 2,
-  //   opacity: 0.3,
-  // };
+  const transparentConf = {
+    points: pointsArr,
+    color: 0x9988ff,
+    radius: 2,
+    opacity: 0.3,
+  };
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    // texture: "images/allow1.jpg",
+    // texture: new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")), // 文本贴图
     texture: "images/southeast.jpg",
     radius: 10,
   };
   // 创建管道
-  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  // scene.add(pipe0);
+  scene.add(pipe0);
   scene.add(pipe1);
-  // return { tubeTexture0, tubeTexture1 };
-  return { tubeTexture1 };
+  return { tubeTexture0, tubeTexture1 };
+  // return { tubeTexture1 };
 }
 
 /**
@@ -274,25 +230,38 @@ function initPipeConf() {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  console.log(path);
   const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
-  const textureLoader = new THREE.TextureLoader();
+  // const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    texture = textureLoader.load(conf.texture);
+    console.log("111111111111");
+    // texture = textureLoader.load(conf.texture);\
+    texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
+    // 设置阵列模式为 RepeatWrapping
+
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.x = 30;
+    texture.repeat.x = 10;
+    texture.repeat.y = 20; // Y轴方向重复
 
-    // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
-    material = new THREE.MeshPhongMaterial({
+    // // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
+    // material = new THREE.MeshPhongMaterial({
+    //   map: texture,
+    //   transparent: true,
+    // });
+
+    //尝试使用文本贴图
+    material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
+      // opacity: 0.1,
+      color: conf.color,
     });
   } else {
+    console.log("sss");
     material = new THREE.MeshPhongMaterial({
       color: conf.color,
       transparent: true,
@@ -344,6 +313,28 @@ function resize() {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
+}
+
+/**
+ * 创建文本贴图
+ * @param text
+ * @returns {HTMLCanvasElement}
+ */
+function getTextCanvas(text) {
+  let width = 512,
+    height = 256;
+  let canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  let ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#dc3f3f";
+  ctx.fillRect(0, 0, width, height);
+  ctx.font = 50 + 'px "sans-serif';
+  ctx.fillStyle = "#2891FF";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, width / 2, height / 2);
+  return canvas;
 }
 
 /**

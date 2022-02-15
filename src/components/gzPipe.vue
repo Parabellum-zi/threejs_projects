@@ -17,94 +17,61 @@ import TileLayer from "@arcgis/core/layers/TileLayer";
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
 import CoordTrans from "../utils/coordTrans";
-
 const sceneContainer = ref(null);
 let scene = reactive({});
 let camera = reactive({});
 let renderer = reactive({});
 // let orbitControls = reactive({});
 
-// 以广州附近的点为示例
-const pointsArr = [
-  [113.23, 23.16, 20],
-  [113.21, 23.17, 20],
-  [113.22, 23.18, 20],
-  [113.23, 23.19, 20],
-  [113.23, 23.2, 20],
-  [113.23, 23.21, 20],
-];
-
 // let pointsArr = reactive([]);
-
-// 广州2000
-const gzPointsArr = [
-  [44213.1035000002, 227755.40550000034],
-  [44182.180499999784, 227759.49349999987],
-  [44152.449500000104, 227763.06450000033],
-  [44123.19049999956, 227767.5775000006],
-  [44093.29050000012, 227771.4564999994],
-  [44063.58249999955, 227775.63150000013],
-  [44033.69649999961, 227779.72149999999],
-  [44004.5083999997, 227783.76239999942],
-  [43994.73000000045, 227784.9759999998],
-  [43996.32100000046, 227807.4810000006],
+// 周大福雨水管溯源路径
+const pointsArr = [
+  [113.33200717035561, 23.123868298337488, 20],
+  [113.33193471797097, 23.12389375632453, 20],
+  [113.33187953734473, 23.123770177383715, 20],
+  [113.33185832872239, 23.123481594596804, 20],
+  [113.33169725322034, 23.12263653054203, 20],
+  [113.3319550555247, 23.122622333204134, 20],
+  [113.33223498079862, 23.12261203308015, 20],
+  [113.33252478587465, 23.122587171140765, 20],
+  [113.3327903879739, 23.122589532743206, 20],
+  [113.33300847557683, 23.12258577162446, 20],
+  [113.33322488273681, 23.122574663006855, 20],
+  [113.33325226582443, 23.122530909194133, 20],
+  [113.3332644228248, 23.122309951803306, 20],
+  [113.33325917485871, 23.12204813100512, 20],
+  [113.3332602085735, 23.121777588490747, 20],
+  [113.33326582366728, 23.12153099095903, 20],
+  [113.33326443507165, 23.12145409799167, 20],
+  [113.33327543328967, 23.121325676116662, 20],
+  [113.33347832991453, 23.12131401426879, 20],
+  [113.33376506377276, 23.121288358975708, 20],
+  [113.33404731471101, 23.121263662071076, 20],
+  [113.33428435196257, 23.12123652778491, 20],
+  [113.33444257785685, 23.12108209002754, 20],
+  [113.33444245620335, 23.12082534299868, 20],
+  [113.33443698584692, 23.12054420347713, 20],
+  [113.33443361968887, 23.12031888058382, 20],
+  [113.33443122026354, 23.120002662765, 20],
+  [113.33442693344298, 23.11972456728798, 20],
+  [113.3344232242018, 23.119552454790348, 20],
+  [113.33453681602084, 23.119526738111013, 20],
+  [113.33475147734951, 23.119489872823163, 20],
+  [113.33512287057088, 23.11944253470876, 20],
+  [113.33565136182612, 23.11937221691412, 20],
+  [113.33648041097598, 23.118473519373225, 20],
+  [113.33648800266937, 23.118457139717187, 20],
 ];
-
-/*const gz = [
-  [44213.1035000002, 227755.40550000034],
-  [44182.180499999784, 227759.49349999987],
-  [44152.449500000104, 227763.06450000033],
-  [44123.19049999956, 227767.5775000006],
-  [44093.29050000012, 227771.4564999994],
-  [44063.58249999955, 227775.63150000013],
-  [44033.69649999961, 227779.72149999999],
-  [44004.5083999997, 227783.76239999942],
-  [43994.73000000045, 227784.9759999998],
-  [43996.32100000046, 227807.4810000006],
-  [43996.74799999967, 227826.48900000006],
-  [43997.150999999605, 227857.31799999997],
-  [43997.42200000025, 227892.32200000063],
-  [43997.77099999972, 227917.33000000007],
-  [43998.33899999969, 227948.39800000004],
-  [43998.3339999998, 227976.8629999999],
-  [43982.43800000008, 227993.72499999963],
-  [43958.01999999955, 227996.55000000075],
-  [43929.23199999984, 227998.9969999995],
-  [43899.987999999896, 228001.5390000008],
-  [43879.294999999925, 228002.61500000022],
-  [43878.17899999954, 228016.82200000063],
-  [43878.32400000002, 228025.33699999936],
-  [43877.762000000104, 228052.6339999996],
-  [43877.6679999996, 228082.58699999936],
-  [43878.21399999969, 228111.58100000024],
-  [43876.98300000001, 228136.03199999966],
-  [43874.191999999806, 228140.84699999914],
-  [43852.12200000044, 228141.84300000034],
-  [43829.88100000005, 228142.01999999955],
-  [43802.794999999925, 228141.46199999936],
-  [43773.242999999784, 228143.88499999978],
-  [43744.69900000002, 228144.70099999942],
-  [43718.411999999546, 228145.9690000005],
-  [43734.86899999995, 228239.7229999993],
-  [43737.042000000365, 228271.6989999991],
-  [43742.67300000042, 228285.44600000046],
-  [43754.14400000032, 228309.6860000007],
-  [43764.37700000033, 228334.3239999991],
-  [43777.43800000008, 228329.65399999917],
-  [43764.37700000033, 228334.3239999991],
-];*/
-
 let texture;
+
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
 /*onBeforeMount(() => {
   changeGZ2web();
 });*/
-
 onMounted(() => {
   initArcMap();
 });
-
 /**
  * 初始化ArcGIS 相关
  */
@@ -119,26 +86,34 @@ function initArcMap() {
     ],
   });
   const map = new Map({ basemap });
-
   let view = new SceneView({
     container: sceneContainer.value,
     map: map,
-    camera: {
-      position: [113.23, 23.16, 2630.6413883436],
-      tilt: 1,
-    },
-    viewingMode: "local",
+    zoom: 9.8,
+  });
+  view.when((view) => {
+    let center = view.extent.center;
+    center.x = 43698.65155595513;
+    center.y = 228054.33760938543;
+    view.goTo(
+      {
+        center,
+        tilt: 0,
+        zoom: 15,
+      },
+      {
+        speedFactor: 2,
+      }
+    );
   });
   view.ui.remove(["attribution", "zoom"]);
   view.ui.empty("top-left");
   window.view = view;
-
   map.ground.opacity = 1;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   // map.ground.navigationConstraint = { type: "none" };
   registerRenderer();
 }
-
 /**
  *
  * @Description: 以下方法参照了
@@ -167,12 +142,10 @@ let myExternalRenderer = {
     });
     renderer.setPixelRatio(window.devicePixelRatio); // 设置设备像素比。通常用于避免HiDPI设备上绘图模糊
     renderer.setViewport(0, 0, window.view.width, window.view.height); // 视口大小设置
-
     // 防止Three.js清除ArcGIS JS API提供的缓冲区。
     renderer.autoClearDepth = false; // 定义renderer是否清除深度缓存
     renderer.autoClearStencil = false; // 定义renderer是否清除模板缓存
     renderer.autoClearColor = false; // 定义renderer是否清除颜色缓存
-
     /*   // 此段暂时预留   此段替换为了render方法中 context.bindRenderTarget();
     // ArcGIS JS API渲染自定义离屏缓冲区，而不是默认的帧缓冲区。
     // 我们必须将这段代码注入到three.js运行时中，以便绑定这些缓冲区而不是默认的缓冲区。
@@ -186,10 +159,8 @@ let myExternalRenderer = {
         context.bindRenderTarget();
       }
     };*/
-
     scene = new THREE.Scene(); // 场景
     camera = new THREE.PerspectiveCamera(); // 相机
-
     // 上帝说比需要有光， 不然你的管就黑了
     const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
     const pointLight = new THREE.PointLight(0xffffff, 0.6);
@@ -204,10 +175,8 @@ let myExternalRenderer = {
     // 更新view的resolution, 在场景中渲染管线等需要此句之后
     scene.userData.viewResolution = window.view.resolution;
     //  基础配置结束
-
-    // initPipeConf();
+    initPipeConf();
     // createCircle(pointsArr[0]);
-    createCircle(gzPointsArr[0]);
   },
   render: function (context) {
     // 更新相机参数
@@ -219,7 +188,6 @@ let myExternalRenderer = {
     );
     // 投影矩阵可以直接复制
     camera.projectionMatrix.fromArray(cam.projectionMatrix);
-
     animate();
     resize();
     // 更新view的resolution
@@ -234,12 +202,10 @@ let myExternalRenderer = {
     context.resetWebGLState();
   },
 };
-
 function registerRenderer() {
   // 向SceneView实例注册外部渲染器
   externalRenderers.add(window.view, myExternalRenderer);
 }
-
 /**
  * 经纬度坐标点转换为渲染坐标系（three js）中的点坐标
  * @param {number} longitude 经度
@@ -250,38 +216,27 @@ function registerRenderer() {
 function pointTransform(longitude, latitude, height) {
   let transformation = new Array(16);
   // 将经纬度坐标转换为xy值
-  let pointXY = webMercatorUtils.lngLatToXY(longitude, latitude);
-  /*let pointXY = CoordTrans.GaussTransform.GZ2000XYtoG2000BL(
-    longitude,
-    latitude
-  );*/
-  // console.log(window.view.spatialReference);
+  // let pointXY = webMercatorUtils.lngLatToXY(longitude, latitude);
+  // 将广州2000坐标转换为xy值
+  let { X, Y } = CoordTrans.GaussTransform.G2000BLtoGZ2000XYZ(
+    latitude,
+    longitude
+  );
+  let positions = {
+    x: X - 1220,
+    y: Y - 340,
+  };
+  console.log(window.view.spatialReference);
   // 先转换高度为0的点
   externalRenderers.renderCoordinateTransformAt(
     window.view,
-    [pointXY[0], pointXY[1], height], // 坐标在地面上的点[x值, y值, 高度值]
+    // [pointXY[0], pointXY[1], height], // 坐标在地面上的点[x值, y值, 高度值]
+    [positions.x, positions.y, height], // 坐标在地面上的点[x值, y值, 高度值]
     window.view.spatialReference,
     transformation
   );
-  console.log("pointXY....", pointXY);
-  // console.log(transformation[12], transformation[13], transformation[14]);
   return [transformation[12], transformation[13], transformation[14]];
 }
-
-function coordinateTriples(longitude, latitude, height) {
-  let renderCoordinates = new Array(6);
-
-  externalRenderers.toRenderCoordinates(
-    window.view,
-    [longitude, latitude, height],
-    0,
-    window.view.spatialReference,
-    renderCoordinates,
-    0,
-    2
-  );
-}
-
 /**
  * 管线初始配置 （直径，颜色，透明度等）
  */
@@ -289,7 +244,7 @@ function initPipeConf() {
   const transparentConf = {
     points: pointsArr,
     color: 0x4488ff,
-    radius: 200,
+    radius: 2,
     opacity: 0.3,
   };
   // 管道内流动的液体
@@ -299,35 +254,43 @@ function initPipeConf() {
     radius: 1,
   };
   // 创建管道
-  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  scene.add(pipe0);
+  // scene.add(pipe0);
   scene.add(pipe1);
-  return { tubeTexture0, tubeTexture1 };
-  // return { tubeTexture1 };
+  // return { tubeTexture0, tubeTexture1 };
+  return { tubeTexture1 };
 }
-
 /**
  *  创建管线
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius);
+  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 15);
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    texture = textureLoader.load(conf.texture);
+    // texture = textureLoader.load(conf.texture);
+    texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
+    // 设置阵列模式为 RepeatWrapping
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
     texture.repeat.x = 30;
-
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
-    material = new THREE.MeshPhongMaterial({
+    // material = new THREE.MeshPhongMaterial({
+    //   map: texture,
+    //   transparent: true,
+    // });
+
+    //尝试使用文本贴图
+    material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
+      // opacity: 0.1,
+      color: conf.color,
     });
   } else {
     material = new THREE.MeshPhongMaterial({
@@ -337,11 +300,9 @@ function creatPipe(conf) {
     });
     material.depthWrite = false;
   }
-
   const mesh = new THREE.Mesh(geometry, material);
   return { texture, mesh };
 }
-
 /**
  * 将经纬度坐标转为 渲染系坐标后生成管线的渲染坐标点
  * @param pointsArr
@@ -354,16 +315,14 @@ function createPath(pointsArr) {
   // 利用CatmullRomCurve3 创建路径，不过是平滑的三维样条曲线
   return new THREE.CatmullRomCurve3(points);
 }
-
 function animate(time) {
-  // time *= 0.0006;
-  // texture.offset.x = (time * 1) % 1; // 贴图运动速度
+  time *= 0.01;
+  texture.offset.x = -(time * 1) % 1; // 贴图运动速度
   // texture.offset.x += 0.001;
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
-
 function resize() {
   const sizes = {
     width: window.innerWidth,
@@ -373,25 +332,21 @@ function resize() {
     // Update sizes
     sizes.width = window.innerWidth;
     sizes.height = window.innerHeight;
-
     // Update camera
     camera.aspect = sizes.width / sizes.height;
     camera.updateProjectionMatrix();
-
     // Update renderer
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
 }
-
 /**
  * 使用圆标记了管线的起始点
  * @param Point
  */
 function createCircle(Point) {
   let endPoint = pointTransform(...Point);
-  // let endPoint = coordinateTriples(...Point);
-  let radius = scene.userData.viewResolution * 30;
+  let radius = scene.userData.viewResolution * 0.5;
   // 生成圆环
   const circleGeometry = new THREE.CircleGeometry(radius, 32);
   const ringMaterial = new THREE.MeshBasicMaterial({
@@ -423,16 +378,26 @@ function createCircle(Point) {
   scene.add(circleMesh);
 }
 
-function changeGZ2web() {
-  let arr = [];
-  gzPointsArr.map((item) => {
-    let resCoords = CoordTrans.GaussTransform.GZ2000XYtoG2000BL(
-      item[0],
-      item[1]
-    );
-    arr.push([resCoords.L, resCoords.B], 200);
-  });
-  pointsArr = arr;
+/**
+ * 创建文本贴图
+ * @param text
+ * @returns {HTMLCanvasElement}
+ */
+function getTextCanvas(text) {
+  let width = 512,
+    height = 256;
+  let canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  let ctx = canvas.getContext("2d");
+  ctx.fillStyle = "rgb(105,181,201)";
+  ctx.fillRect(0, 0, width, height); //管透明度
+  ctx.font = 50 + 'px "sans-serif';
+  ctx.fillStyle = "#2891FF";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, width / 2, height / 2);
+  return canvas;
 }
 </script>
 
@@ -441,7 +406,6 @@ function changeGZ2web() {
   width: 100%;
   height: 100%;
 }
-
 #sceneContainer,
 canvas {
   position: fixed;

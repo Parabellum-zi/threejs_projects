@@ -9,7 +9,7 @@ This template should help get you started developing with Vue 3 in Vite. The tem
 
 
 
-Pipeline texture fillText(‘text’)
-OpacityPipe threejs Scene pipeline
-newArcgis  Threejs combining arcgisjs(lnglat)
-gzPipe Threejs combining arcgisjs(gz2000)
+- Pipeline texture fillText(‘text’) ;
+- OpacityPipe threejs Scene pipeline ;
+- newArcgis  Threejs combining arcgisjs (lnglat) ;
+- gzPipe Threejs combining arcgisjs (gz2000)
