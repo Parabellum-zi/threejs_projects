@@ -33,6 +33,10 @@ const routes = [
     path: "/reactives",
     component: () => import("../components/reactives.vue"),
   },
+  {
+    path: "/loadModel",
+    component: () => import("../components/loadModel.vue"),
+  },
 ];
 const router = createRouter({
   history: createWebHistory(),
