@@ -15,63 +15,28 @@ import SceneView from "@arcgis/core/views/SceneView";
 import Basemap from "@arcgis/core/Basemap";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 import SceneLayer from "@arcgis/core/layers/SceneLayer";
+import Graphic from "@arcgis/core/Graphic";
+
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
 import CoordTrans from "../utils/coordTrans";
 const sceneContainer = ref(null);
-let scene = reactive({});
-let camera = reactive({});
-let renderer = reactive({});
+// let scene = reactive({});
+// let camera = reactive({});
+// let renderer = reactive({});
 // let orbitControls = reactive({});
 
 let pointsArr = reactive([]);
-// 周大福雨水管溯源路径
-/*const pointsArr = [
-  [113.33200717035561, 23.123868298337488, 20],
-  [113.33193471797097, 23.12389375632453, 20],
-  [113.33187953734473, 23.123770177383715, 20],
-  [113.33185832872239, 23.123481594596804, 20],
-  [113.33169725322034, 23.12263653054203, 20],
-  [113.3319550555247, 23.122622333204134, 20],
-  [113.33223498079862, 23.12261203308015, 20],
-  [113.33252478587465, 23.122587171140765, 20],
-  [113.3327903879739, 23.122589532743206, 20],
-  [113.33300847557683, 23.12258577162446, 20],
-  [113.33322488273681, 23.122574663006855, 20],
-  [113.33325226582443, 23.122530909194133, 20],
-  [113.3332644228248, 23.122309951803306, 20],
-  [113.33325917485871, 23.12204813100512, 20],
-  [113.3332602085735, 23.121777588490747, 20],
-  [113.33326582366728, 23.12153099095903, 20],
-  [113.33326443507165, 23.12145409799167, 20],
-  [113.33327543328967, 23.121325676116662, 20],
-  [113.33347832991453, 23.12131401426879, 20],
-  [113.33376506377276, 23.121288358975708, 20],
-  [113.33404731471101, 23.121263662071076, 20],
-  [113.33428435196257, 23.12123652778491, 20],
-  [113.33444257785685, 23.12108209002754, 20],
-  [113.33444245620335, 23.12082534299868, 20],
-  [113.33443698584692, 23.12054420347713, 20],
-  [113.33443361968887, 23.12031888058382, 20],
-  [113.33443122026354, 23.120002662765, 20],
-  [113.33442693344298, 23.11972456728798, 20],
-  [113.3344232242018, 23.119552454790348, 20],
-  [113.33453681602084, 23.119526738111013, 20],
-  [113.33475147734951, 23.119489872823163, 20],
-  [113.33512287057088, 23.11944253470876, 20],
-  [113.33565136182612, 23.11937221691412, 20],
-  [113.33648041097598, 23.118473519373225, 20],
-  [113.33648800266937, 23.118457139717187, 20],
-];*/
+
 let texture;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
+let stripMesh;
 onBeforeMount(() => {
   getYsdData();
 });
 onMounted(() => {
-  initArcMap();
-  // initPointLight();
+  // initArcMap();
 });
 /**
  * 初始化ArcGIS 相关
@@ -80,8 +45,6 @@ function initArcMap() {
   const basemap = new Basemap({
     baseLayers: [
       new TileLayer({
-        // url: "http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
-        // url: "http://10.194.69.43/server/rest/services/GDBasemap/MapServer",
         url: "http://10.194.150.155:8010/ServiceAccess/MapService-T/2017年卫星影像地图_广州2000坐标系_/19f3612a2b44e98baae1f40713a085b6",
         title: "Basemap",
       }),
@@ -121,17 +84,7 @@ function initArcMap() {
   registerRenderer();
 }
 
-function initPointLight() {
-  const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
-  const pointLight = new THREE.PointLight(0xffffff, 1);
-  pointLight.position.x = 2;
-  pointLight.position.y = 3;
-  pointLight.position.z = 4;
-  scene.add(ambientLight);
-  scene.add(pointLight);
-}
 /**
- *
  * @Description: 以下方法参照了
  * https://developers.arcgis.com/javascript/latest/api-reference/esri-views-3d-externalRenderers.html
  * https://developers.arcgis.com/javascript/latest/api-reference/esri-geometry-support-webMercatorUtils.html
@@ -144,24 +97,25 @@ function initPointLight() {
  * @type {{setup: myExternalRenderer.setup, render: myExternalRenderer.render}}
  */
 let myExternalRenderer = {
-  // scene: null, // three.js 中的场景
-  // camera: null, // three.js 相机
-  // renderer: null, // three.js 渲染器
+  view: window.view,
+  scene: null, // three.js 中的场景
+  camera: null, // three.js 相机
+  renderer: null, // three.js 渲染器
   /**
    * Setup function, called once by the ArcGIS JS API.
    注册对象时被调用,只调用一次,用于初始化three.js创建的对象
    */
   setup: function (context) {
-    renderer = new THREE.WebGLRenderer({
+    this.renderer = new THREE.WebGLRenderer({
       context: context.gl, // 可用于将渲染器附加到已有的渲染环境(RenderingContext)中
       premultipliedAlpha: false, // renderer是否假设颜色有 premultiplied alpha. 默认为true
     });
-    renderer.setPixelRatio(window.devicePixelRatio); // 设置设备像素比。通常用于避免HiDPI设备上绘图模糊
-    renderer.setViewport(0, 0, window.view.width, window.view.height); // 视口大小设置
+    this.renderer.setPixelRatio(window.devicePixelRatio); // 设置设备像素比。通常用于避免HiDPI设备上绘图模糊
+    this.renderer.setViewport(0, 0, window.view.width, window.view.height); // 视口大小设置
     // 防止Three.js清除ArcGIS JS API提供的缓冲区。
-    renderer.autoClearDepth = false; // 定义renderer是否清除深度缓存
-    renderer.autoClearStencil = false; // 定义renderer是否清除模板缓存
-    renderer.autoClearColor = false; // 定义renderer是否清除颜色缓存
+    this.renderer.autoClearDepth = false; // 定义renderer是否清除深度缓存
+    this.renderer.autoClearStencil = false; // 定义renderer是否清除模板缓存
+    this.renderer.autoClearColor = false; // 定义renderer是否清除颜色缓存
     /*   // 此段暂时预留   此段替换为了render方法中 context.bindRenderTarget();
     // ArcGIS JS API渲染自定义离屏缓冲区，而不是默认的帧缓冲区。
     // 我们必须将这段代码注入到three.js运行时中，以便绑定这些缓冲区而不是默认的缓冲区。
@@ -175,43 +129,63 @@ let myExternalRenderer = {
         context.bindRenderTarget();
       }
     };*/
-    scene = new THREE.Scene(); // 场景
-    camera = new THREE.PerspectiveCamera(); // 相机
+    this.scene = new THREE.Scene(); // 场景
+    this.camera = new THREE.PerspectiveCamera(); // 相机
     // 上帝说比需要有光， 不然你的管就黑了
     const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
     const pointLight = new THREE.PointLight(0xffffff, 0.6);
     pointLight.position.x = 2;
     pointLight.position.y = 3;
     pointLight.position.z = 4;
-    scene.add(ambientLight);
-    scene.add(pointLight);
+    this.scene.add(ambientLight);
+    this.scene.add(pointLight);
     // 添加坐标轴辅助工具
-    const axesHelper = new THREE.AxesHelper(10000000);
-    scene.add(axesHelper);
+    const axesHelper = new THREE.AxesHelper(1000000);
+    this.scene.add(axesHelper);
     // 更新view的resolution, 在场景中渲染管线等需要此句之后
-    scene.userData.viewResolution = window.view.resolution;
+    this.scene.userData.viewResolution = window.view.resolution;
     //  基础配置结束
     initPipeConf();
-    createCircle(pointsArr[0]);
+    // createCircle(pointsArr[0]);
+    // addGraphic(window.view);
   },
   render: function (context) {
     // 更新相机参数
     const cam = context.camera;
-    camera.position.set(cam.eye[0], cam.eye[1], cam.eye[2]);
-    camera.up.set(cam.up[0], cam.up[1], cam.up[2]);
-    camera.lookAt(
+    this.camera.position.set(cam.eye[0], cam.eye[1], cam.eye[2]);
+    this.camera.up.set(cam.up[0], cam.up[1], cam.up[2]);
+    this.camera.lookAt(
       new THREE.Vector3(cam.center[0], cam.center[1], cam.center[2])
     );
     // 投影矩阵可以直接复制
-    camera.projectionMatrix.fromArray(cam.projectionMatrix);
-    animate();
-    resize();
+    this.camera.projectionMatrix.fromArray(cam.projectionMatrix);
+    // animate start
+    texture.offset.x += 0.0005; // 贴图运动速度
+    texture.needsUpdate = true;
+    // requestAnimationFrame(animate);
+    this.renderer.render(this.scene, this.camera);
+    // resize start
+    const sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+    window.addEventListener("resize", () => {
+      // Update sizes
+      sizes.width = window.innerWidth;
+      sizes.height = window.innerHeight;
+      // Update camera
+      this.camera.aspect = sizes.width / sizes.height;
+      this.camera.updateProjectionMatrix();
+      // Update renderer
+      this.renderer.setSize(sizes.width, sizes.height);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
     // 更新view的resolution
     // scene.userData.viewResolution = this.view.resolution;
     // 绘制场景
-    renderer.state.reset();
+    this.renderer.state.reset();
     context.bindRenderTarget();
-    renderer.render(scene, camera);
+    this.renderer.render(this.scene, this.camera);
     // 请求重绘视图。
     externalRenderers.requestRender(window.view);
     // cleanup
@@ -257,60 +231,94 @@ function pointTransform(longitude, latitude, height) {
  * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
-  const transparentConf = {
+  /* const transparentConf = {
     points: pointsArr,
     color: 0x4488ff,
     radius: 2,
-    opacity: 0.3,
-  };
+    opacity: 1,
+  };*/
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/allow3.png",
+    texture: "images/redAllow.png",
     // radius: 1,
-    radius: 1,
+    radius: 1.1,
   };
   // 创建管道
   // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
   // scene.add(pipe0);
-  scene.add(pipe1);
+  // myExternalRenderer.scene.add(pipe0);
+  myExternalRenderer.scene.add(pipe1);
   // return { tubeTexture0, tubeTexture1 };
+
+  /* // 管中心平面
+  const stripGeo = new THREE.PlaneBufferGeometry(1.7, 10);
+  const stripMat = new THREE.MeshBasicMaterial({
+    map: texture,
+    opacity: 0.5,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
+  });
+  stripMesh = new THREE.Mesh(stripGeo, stripMat);
+  myExternalRenderer.scene.add(stripMesh);
+  stripMesh.rotation.z = Math.PI * 0.5;
+  // stripMesh.rotation.y = Math.PI * 0.5;
+  stripMesh.rotation.x = Math.PI * 0.5;*/
   return { tubeTexture1 };
 }
+function addGraphic(view) {
+  view.graphics.add(
+    new Graphic({
+      geometry: {
+        type: "polyline",
+        paths: pointsArr,
+        spatialReference: view.spatialReference,
+      },
+      symbol: {
+        type: "simple-line",
+        color: [255, 90, 141],
+        width: 10,
+        cap: "round",
+        join: "round",
+      },
+    })
+  );
+}
+
 /**
  *  创建管线
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  console.log(path);
   const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
     texture = textureLoader.load(conf.texture);
-    // texture = new THREE.CanvasTexture(getTextCanvas("➯")); // 文本贴图
-    // 设置阵列模式为 RepeatWrapping
+    // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.x = 30;
-    texture.repeat.y = 3;
+    texture.repeat.set(50, 4);
+    // texture.rotation = Math.PI; // 旋转贴图方向
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
-    // material = new THREE.MeshPhongMaterial({
-    //   map: texture,
-    //   transparent: true,
-    // });
+    material = new THREE.MeshPhongMaterial({
+      map: texture,
+      transparent: true,
+    });
 
     //尝试使用文本贴图
-    material = new THREE.MeshBasicMaterial({
+    /* material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
       // opacity: 0.1,
       color: conf.color,
-    });
+    });*/
   } else {
     material = new THREE.MeshPhongMaterial({
       color: conf.color,
@@ -320,6 +328,8 @@ function creatPipe(conf) {
     material.depthWrite = false;
   }
   const mesh = new THREE.Mesh(geometry, material);
+  // mesh.rotation.x = Math.PI * 0.5; //修改箭头在管壁的位置
+
   return { texture, mesh };
 }
 /**
@@ -334,12 +344,10 @@ function createPath(pointsArr) {
   // 利用CatmullRomCurve3 创建路径，不过是平滑的三维样条曲线
   return new THREE.CatmullRomCurve3(points);
 }
-function animate(time) {
-  time *= 0.01;
-  // console.log(texture);
-  texture.offset.x = -(time * 1) % 1; // 贴图运动速度
-  texture.needsUpdate = true;
-
+/*function animate(time) {
+  time *= 0.0009;
+  // texture.offset.x = -(time * 1) % 1; // 贴图运动速度
+  // texture.needsUpdate = true;
   // // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
@@ -360,7 +368,7 @@ function resize() {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
-}
+}*/
 /**
  * 使用圆标记了管线的起始点
  * @param Point
@@ -413,10 +421,10 @@ function getTextCanvas(text) {
   let ctx = canvas.getContext("2d");
   // ctx.fillStyle = "rgb(105,181,201)";
   // ctx.fillStyle = "rgba(76,180,206,0.1)";
-  ctx.fillStyle = "rgba(222,54,54,0.6)";
+  ctx.fillStyle = "rgba(212,35,35,0.1)";
   ctx.fillRect(0, 0, width, height); //管透明度
-  ctx.font = 500 + 'px "sans-serif';
-  ctx.fillStyle = "rgb(255,255,255)";
+  ctx.font = 50 + 'px "sans-serif';
+  ctx.fillStyle = "rgb(16,239,121)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, width / 2, height / 2);
@@ -425,23 +433,24 @@ function getTextCanvas(text) {
 
 function getYsdData() {
   let arr = [];
-  fetch("static/json/wsd11.json")
+  fetch("static/json/wsgsy0216.json")
     .then((res) => res.json())
     .then((data) => {
       data.features = data.features.sort(
-        (a, b) => b.attributes.sxbh - a.attributes.sxbh
+        (a, b) => b.attributes.sx - a.attributes.sx
       );
       data.features.map((item) => {
         arr.push([item.geometry.x, item.geometry.y, -1.5]);
       });
-      // arr = arr.slice(0, 20);
       pointsArr = arr;
-      // console.log(arr.slice(0, 20));
-      // pointsArr = arr.slice(0, 20);
+    })
+    .then(() => {
+      initArcMap();
     })
     .catch((e) => {
       console.log(e.message);
     });
+  return arr;
 }
 </script>
 

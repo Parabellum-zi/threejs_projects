@@ -137,36 +137,6 @@ function initMap() {
       //创建几何体
       let v3List = [];
       path.forEach((item) => {
-        // var renderPos = [0, 0, 0];
-        // externalRenderers.toRenderCoordinates(
-        //   this.view,
-        //   [item[0], item[1], 20],
-        //   0,
-        //   SpatialReference.WGS84,
-        //   renderPos,
-        //   0,
-        //   1
-        // );
-        // let transformation = new Array(16);
-        // // 将经纬度坐标转换为xy值
-        // let pointXY = webMercatorUtils.lngLatToXY(item[0], item[1]);
-        // // console.log(pointXY);
-        // // 先转换高度为0的点
-        // externalRenderers.renderCoordinateTransformAt(
-        //   view,
-        //   [pointXY[0], pointXY[1], 50], // 坐标在地面上的点[x值, y值, 高度值]
-        //   view.spatialReference,
-        //   transformation
-        // );
-        // console.log(transformation);
-        // v3List.push(
-        //   new THREE.Vector3(
-        //     transformation[12],
-        //     transformation[13],
-        //     transformation[14]
-        //   )
-        // );
-        console.log(item[0], item[1]);
         var renderPos = [0, 0, 0];
         externalRenderers.toRenderCoordinates(
           this.view,
@@ -183,7 +153,6 @@ function initMap() {
         );
       });
       let curve = new THREE.CatmullRomCurve3(v3List, false);
-      console.log(curve);
       /**
        * path 管道的形状 曲线
        * tubularsSegements    管道分成多少段
@@ -192,14 +161,14 @@ function initMap() {
        * closed 收尾是否相连 封闭
        * @type {TubeGeometry}
        */
-      let tubeGeometry = new THREE.TubeGeometry(curve, 100, 100, 8, false);
+      let tubeGeometry = new THREE.TubeGeometry(curve, 100, 10, 8, false);
       var textureLoader = new THREE.TextureLoader();
       //设置纹理贴图
-      this.map = textureLoader.load("images/allow3.png");
+      this.map = textureLoader.load("images/allow.png");
       this.map.wrapS = THREE.RepeatWrapping;
       this.map.wrapT = THREE.RepeatWrapping;
-      this.map.repeat.set(20, 4);
-
+      this.map.repeat.set(20, 1);
+      // this.map.rotation = Math.PI;
       let material = new THREE.MeshBasicMaterial({
         color: 0x85a9a9,
         side: 200,
@@ -209,6 +178,7 @@ function initMap() {
         opacity: 1,
       });
       let tube1 = new THREE.Mesh(tubeGeometry, material);
+      // tube1.rotation.x = Math.PI * 0.1;
       this.scene.add(tube1);
 
       // let tubeGeometry2 = new THREE.TubeGeometry(curve, 20, 120, 8, false);
@@ -233,7 +203,7 @@ function initMap() {
       // 投影矩阵可以直接复制
       this.camera.projectionMatrix.fromArray(cam.projectionMatrix);
       // // 更新几何体
-      this.map.offset.x += 0.009;
+      this.map.offset.x += -0.009;
       this.map.needsUpdate = true;
       // 绘制场景
       this.renderer.state.reset();
