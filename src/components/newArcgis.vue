@@ -64,7 +64,7 @@ onMounted(() => {
  * 初始化ArcGIS 相关
  */
 function initArcMap() {
-  const basemap = new Basemap({
+  /*  const basemap = new Basemap({
     baseLayers: [
       new TileLayer({
         url: "http://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer",
@@ -72,15 +72,16 @@ function initArcMap() {
         title: "Basemap",
       }),
     ],
-  });
-  const map = new Map({ basemap });
+  });*/
+  // const map = new Map({ basemap });
+  const map = new Map({ basemap: "satellite" });
 
   let view = new SceneView({
     container: sceneContainer.value,
     map: map,
     camera: {
       // position: [113.23, 23.16, 2630.6413883436],
-      position: [115.9210717080402, 30.896913111159947, 13154.641086300715],
+      position: [115.87107, 30.9969, 1315],
       tilt: 1,
     },
   });
@@ -88,7 +89,7 @@ function initArcMap() {
   view.ui.empty("top-left");
   window.view = view;
 
-  map.ground.opacity = 1;
+  map.ground.opacity = 0.5;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   // map.ground.navigationConstraint = { type: "none" };
   registerRenderer();
@@ -242,7 +243,7 @@ function pointTransform(longitude, latitude, height) {
 /**
  * 管线初始配置 （直径，颜色，透明度等）
  */
-function initPipeConf(scene) {
+function initPipeConf() {
   /*const transparentConf = {
     points: pointsArr,
     color: 0x9988ff,
@@ -260,7 +261,7 @@ function initPipeConf(scene) {
   // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
   // scene.add(pipe0);
-  scene.add(pipe1);
+  myExternalRenderer.scene.add(pipe1);
   // return { tubeTexture0, tubeTexture1 };
   return { tubeTexture1 };
 }
@@ -274,7 +275,16 @@ function creatPipe(conf) {
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
-    texture = textureLoader.load(conf.texture);
+    texture = textureLoader.load(conf.texture, () => {
+      /*     //点光源
+      let point = new THREE.PointLight(0xffffff);
+      point.position.set(
+        -2382004.007139146,
+        4925447.561184913,
+        3278247.9998681694
+      ); //点光源位置
+      myExternalRenderer.scene.add(point); //点光源添加到场景中*/
+    });
     // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
 
@@ -283,13 +293,16 @@ function creatPipe(conf) {
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    // texture.repeat.x = 10;
-    // texture.repeat.y = 20; // Y轴方向重复
-    texture.repeat.set(30, 4);
+    texture.repeat.set(30, 1);
     // // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
-    material = new THREE.MeshPhongMaterial({
+    // material = new THREE.MeshPhongMaterial({
+    material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
+      // opacity: 0.99,
+      // side: THREE.DoubleSide,
+      alphaTest: 0.01,
+      // depthTest: false, // 深度检测
     });
 
     /*  //尝试使用文本贴图
@@ -331,7 +344,7 @@ function createPath(pointsArr) {
   return new THREE.CatmullRomCurve3(points);
 }
 
-function animate(time) {
+/*function animate(time) {
   time *= 0.001;
   texture.offset.x = (time * 1) % 1; // 贴图运动速度
   texture.needsUpdate = true;
@@ -359,7 +372,7 @@ function resize() {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
-}
+}*/
 
 /**
  * 创建文本贴图

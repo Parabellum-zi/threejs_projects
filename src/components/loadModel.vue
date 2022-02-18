@@ -119,7 +119,14 @@ function resize() {
 
 function animate(time) {
   time *= 0.001;
-  // if (loadedGltf.length === 0) return;
+  modelChange(time);
+  // const elapsedTime = clock.getElapsedTime();
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+
+function modelChange(time) {
+  if (loadedGltf.length === 0) return;
   loadedGltf.map((item) => {
     // console.log(item);
     switch (item.name) {
@@ -137,10 +144,6 @@ function animate(time) {
         break;
     }
   });
-
-  // const elapsedTime = clock.getElapsedTime();
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
 }
 
 /**
@@ -172,7 +175,7 @@ function loadModel() {
     "static/model/CVT.gltf",
     (gltf) => {
       scene.add(gltf.scene);
-      // console.log(dumpObject(gltf.scene).join("\n"));
+      console.log(dumpObject(gltf.scene).join("\n"));
       loadedGltf.push(gltf.scene.getObjectByName("Mesh206"));
       loadedGltf.push(gltf.scene.getObjectByName("Mesh207"));
       loadedGltf.push(gltf.scene.getObjectByName("Mesh208"));
