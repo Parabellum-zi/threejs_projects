@@ -12,11 +12,11 @@ import esriConfig from "@arcgis/core/config.js";
 esriConfig.assetsPath = "./assets";
 import Map from "@arcgis/core/Map";
 import SceneView from "@arcgis/core/views/SceneView";
-import Basemap from "@arcgis/core/Basemap";
-import TileLayer from "@arcgis/core/layers/TileLayer";
+// import Basemap from "@arcgis/core/Basemap";
+// import TileLayer from "@arcgis/core/layers/TileLayer";
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
-import SpatialReference from "@arcgis/core/geometry/SpatialReference";
+// import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 
 const sceneContainer = ref(null);
 // let scene = reactive({});
@@ -25,12 +25,6 @@ const sceneContainer = ref(null);
 // let orbitControls = reactive({});
 // 以广州附近的点为示例
 const pointsArr = [
-  // [113.23, 23.16, 20],
-  // [113.21, 23.17, 20],
-  // [113.22, 23.18, 20],
-  // [113.23, 23.19, 20],
-  // [113.23, 23.2, 20],
-  // [113.23, 23.21, 20],
   [115.80895340787583, 30.92933111293343, 20],
   [115.81947621477968, 30.936026430486265, 20],
   [115.85073577332635, 30.952730603143078, 20],
@@ -89,7 +83,7 @@ function initArcMap() {
   view.ui.empty("top-left");
   window.view = view;
 
-  map.ground.opacity = 0.5;
+  // map.ground.opacity = 0.5;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   // map.ground.navigationConstraint = { type: "none" };
   registerRenderer();
@@ -157,7 +151,7 @@ let myExternalRenderer = {
     this.scene.add(ambientLight);
     this.scene.add(pointLight);
     // 添加坐标轴辅助工具
-    const axesHelper = new THREE.AxesHelper(10000000);
+    const axesHelper = new THREE.AxesHelper(5000000);
     this.scene.add(axesHelper);
     // 更新view的resolution, 在场景中渲染管线等需要此句之后
     this.scene.userData.viewResolution = window.view.resolution;
@@ -244,23 +238,23 @@ function pointTransform(longitude, latitude, height) {
  * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
-  /*const transparentConf = {
+  const transparentConf = {
     points: pointsArr,
-    color: 0x9988ff,
-    radius: 2,
-    opacity: 0.3,
-  };*/
+    color: 0x4488ff,
+    radius: 1.5,
+    opacity: 0.1,
+  };
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
     // texture: new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")), // 文本贴图
-    texture: "images/allow.png",
-    radius: 12,
+    texture: "images/allow2.png",
+    radius: 3,
   };
   // 创建管道
   // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  // scene.add(pipe0);
+  // myExternalRenderer.scene.add(pipe0);
   myExternalRenderer.scene.add(pipe1);
   // return { tubeTexture0, tubeTexture1 };
   return { tubeTexture1 };
@@ -285,15 +279,16 @@ function creatPipe(conf) {
       ); //点光源位置
       myExternalRenderer.scene.add(point); //点光源添加到场景中*/
     });
-    // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
-    // 设置阵列模式为 RepeatWrapping
-
+    // 文本贴图
+    // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯"));
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.set(30, 1);
+    texture.repeat.set(300, 4); // x,y 贴图重复
+    texture.offset.y = 0.15; //设置管道纹理偏移
+
     // // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     // material = new THREE.MeshPhongMaterial({
     material = new THREE.MeshBasicMaterial({
@@ -301,7 +296,7 @@ function creatPipe(conf) {
       transparent: true,
       // opacity: 0.99,
       // side: THREE.DoubleSide,
-      alphaTest: 0.01,
+      alphaTest: 0.01, // 解决了贴图的透明部分显示为黑色
       // depthTest: false, // 深度检测
     });
 

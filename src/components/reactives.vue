@@ -124,7 +124,6 @@ function initMap() {
           0,
           1
         );
-        console.log(renderPos[0], renderPos[1], renderPos[2]);
         v3List.push(
           new THREE.Vector3(renderPos[0], renderPos[1], renderPos[2])
         );
@@ -138,7 +137,7 @@ function initMap() {
        * closed 收尾是否相连 封闭
        * @type {TubeGeometry}
        */
-      let tubeGeometry = new THREE.TubeGeometry(curve, 100, 10, 8, false);
+      let tubeGeometry = new THREE.TubeGeometry(curve, 20, 10, 8, false);
       var textureLoader = new THREE.TextureLoader();
       //设置纹理贴图
       this.map = textureLoader.load("images/allow.png");
@@ -152,20 +151,20 @@ function initMap() {
         map: this.map,
         transparent: true,
         depthWrite: false,
-        opacity: 1,
+        // opacity: 1,
       });
       let tube1 = new THREE.Mesh(tubeGeometry, material);
       // tube1.rotation.x = Math.PI * 0.1;
       this.scene.add(tube1);
 
-      // let tubeGeometry2 = new THREE.TubeGeometry(curve, 20, 120, 8, false);
-      // let tubeMaterial2 = new THREE.MeshPhongMaterial({
-      //   color: 0xaaaaaa,
-      //   transparent: true,
-      //   opacity: 0.25,
-      // });
-      // let tube2 = new THREE.Mesh(tubeGeometry2, tubeMaterial2);
-      // this.scene.add(tube2);
+      let tubeGeometry2 = new THREE.TubeGeometry(curve, 20, 8, 8, false);
+      let tubeMaterial2 = new THREE.MeshPhongMaterial({
+        color: 0x9988ff,
+        transparent: true,
+        opacity: 1,
+      });
+      let tube2 = new THREE.Mesh(tubeGeometry2, tubeMaterial2);
+      this.scene.add(tube2);
 
       // context.resetWebGLState();
     },
