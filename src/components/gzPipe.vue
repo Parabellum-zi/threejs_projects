@@ -47,6 +47,7 @@ function initArcMap() {
       new TileLayer({
         url: "http://10.194.150.155:8010/ServiceAccess/MapService-T/2017年卫星影像地图_广州2000坐标系_/19f3612a2b44e98baae1f40713a085b6",
         title: "Basemap",
+        // visible: false,
       }),
     ],
   });
@@ -63,13 +64,13 @@ function initArcMap() {
     view.goTo({
       center,
       tilt: 0,
-      zoom: 15,
+      zoom: 16,
     });
   });
   view.ui.remove(["attribution", "zoom"]);
   view.ui.empty("top-left");
   window.view = view;
-  map.ground.opacity = 0.5;
+  map.ground.opacity = 0.3;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   map.ground.navigationConstraint = { type: "none" };
   // 图层
@@ -77,7 +78,7 @@ function initArcMap() {
     id: "sceneLayer",
     // url: 'https://gis.swj.gz.gov.cn/server/rest/services/Hosted/PQWSG20220113/SceneServer', // 域名
     // url: "http://10.194.171.119/server/rest/services/Hosted/DWDPWSJCS20220122/SceneServer", // ip
-    url: "http://10.194.171.119/server/rest/services/eslpk/XFWWSGX20211215/SceneServer",
+    url: "http://10.194.171.3/server/rest/services/eslpk/XFWWSGX20211215/SceneServer",
   });
   map.add(sceneLayer);
 
@@ -116,6 +117,8 @@ let myExternalRenderer = {
     this.renderer.autoClearDepth = false; // 定义renderer是否清除深度缓存
     this.renderer.autoClearStencil = false; // 定义renderer是否清除模板缓存
     this.renderer.autoClearColor = false; // 定义renderer是否清除颜色缓存
+    this.renderer.shadowMap.enabled = false;
+
     /*   // 此段暂时预留   此段替换为了render方法中 context.bindRenderTarget();
     // ArcGIS JS API渲染自定义离屏缓冲区，而不是默认的帧缓冲区。
     // 我们必须将这段代码注入到three.js运行时中，以便绑定这些缓冲区而不是默认的缓冲区。
@@ -132,21 +135,22 @@ let myExternalRenderer = {
     this.scene = new THREE.Scene(); // 场景
     this.camera = new THREE.PerspectiveCamera(); // 相机
     // 上帝说比需要有光， 不然你的管就黑了
-    const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
+    const ambientLight = new THREE.AmbientLight(0xffffff); // 自然光，每个几何体的每个面都有光
     const pointLight = new THREE.PointLight(0xffffff, 0.6);
     pointLight.position.x = 2;
     pointLight.position.y = 3;
     pointLight.position.z = 4;
+    pointLight.castShadow = false;
+
     this.scene.add(ambientLight);
     this.scene.add(pointLight);
     // 添加坐标轴辅助工具
-    const axesHelper = new THREE.AxesHelper(1000000);
-    this.scene.add(axesHelper);
+    // const axesHelper = new THREE.AxesHelper(1000000);
+    // this.scene.add(axesHelper);
     // 更新view的resolution, 在场景中渲染管线等需要此句之后
     this.scene.userData.viewResolution = window.view.resolution;
     //  基础配置结束
     initPipeConf();
-    // createCircle(pointsArr[0]);
     // addGraphic(window.view);
   },
   render: function (context) {
@@ -160,7 +164,7 @@ let myExternalRenderer = {
     // 投影矩阵可以直接复制
     this.camera.projectionMatrix.fromArray(cam.projectionMatrix);
     // animate start
-    texture.offset.x += 0.0005; // 贴图运动速度
+    texture.offset.x += -0.005; // 贴图运动速度
     texture.needsUpdate = true;
     // requestAnimationFrame(animate);
     this.renderer.render(this.scene, this.camera);
@@ -231,28 +235,27 @@ function pointTransform(longitude, latitude, height) {
  * 管线初始配置 （直径，颜色，透明度等）
  */
 function initPipeConf() {
-  /* const transparentConf = {
+  const transparentConf = {
     points: pointsArr,
     color: 0x4488ff,
-    radius: 2,
-    opacity: 1,
-  };*/
+    radius: 3,
+    opacity: 0.6,
+  };
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/redAllow.png",
-    // radius: 1,
-    radius: 1.1,
+    texture: "images/allow2.png",
+    radius: 1.5,
   };
   // 创建管道
-  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
   // scene.add(pipe0);
-  // myExternalRenderer.scene.add(pipe0);
+  myExternalRenderer.scene.add(pipe0);
   myExternalRenderer.scene.add(pipe1);
-  // return { tubeTexture0, tubeTexture1 };
+  return { tubeTexture0, tubeTexture1 };
 
-  /* // 管中心平面
+  /* // 尝试构建管中心平面
   const stripGeo = new THREE.PlaneBufferGeometry(1.7, 10);
   const stripMat = new THREE.MeshBasicMaterial({
     map: texture,
@@ -267,7 +270,7 @@ function initPipeConf() {
   stripMesh.rotation.z = Math.PI * 0.5;
   // stripMesh.rotation.y = Math.PI * 0.5;
   stripMesh.rotation.x = Math.PI * 0.5;*/
-  return { tubeTexture1 };
+  // return { tubeTexture1 };
 }
 function addGraphic(view) {
   view.graphics.add(
@@ -293,25 +296,33 @@ function addGraphic(view) {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20);
+  const geometry = new THREE.TubeGeometry(path, 3000, conf.radius, 5, false);
+  // console.log(geometry);
+  // geometry.segments = 1;
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
     texture = textureLoader.load(conf.texture);
+    // texture = new THREE.TextureLoader().load(conf.texture, () => {
+    texture.needsUpdate = true;
+
     // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
     // 设置阵列模式为 RepeatWrapping
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.set(50, 4);
-    // texture.rotation = Math.PI; // 旋转贴图方向
+    texture.repeat.set(50, 2);
+    texture.offset.y = 0.5;
+    texture.rotation = Math.PI; // 旋转贴图方向
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     material = new THREE.MeshPhongMaterial({
       map: texture,
       transparent: true,
+      alphaTest: 0.01, // 解决了贴图的透明部分显示为黑色
+      side: THREE.DoubleSide, // 双面渲染，不留阴影。
     });
-
+    // });
     //尝试使用文本贴图
     /* material = new THREE.MeshBasicMaterial({
       map: texture,
@@ -329,7 +340,8 @@ function creatPipe(conf) {
   }
   const mesh = new THREE.Mesh(geometry, material);
   // mesh.rotation.x = Math.PI * 0.5; //修改箭头在管壁的位置
-
+  mesh.receiveShadow = false;
+  mesh.castShadow = false;
   return { texture, mesh };
 }
 /**

@@ -69,6 +69,9 @@ function initMap() {
       },
     })
   );
+  // map.allLayers._items[0].visible = false;
+  map.ground.opacity = 0.1;
+  // map.ground.navigationC onstraint = { type: "none" };
   //引入three js
   const myRenderer = {
     view: view,
@@ -108,8 +111,8 @@ function initMap() {
       ambient.position.set(0, 100, 0);
       this.scene.add(ambient);
       //添加坐标轴辅助工具
-      const axesHelper = new THREE.AxesHelper(10000000);
-      this.scene.add(axesHelper);
+      /*      const axesHelper = new THREE.AxesHelper(10000000);
+      this.scene.add(axesHelper);*/
 
       //创建几何体
       let v3List = [];
@@ -137,14 +140,15 @@ function initMap() {
        * closed 收尾是否相连 封闭
        * @type {TubeGeometry}
        */
-      let tubeGeometry = new THREE.TubeGeometry(curve, 20, 10, 8, false);
+      let tubeGeometry = new THREE.TubeGeometry(curve, 20, 5, 8, false);
       var textureLoader = new THREE.TextureLoader();
       //设置纹理贴图
-      this.map = textureLoader.load("images/allow.png");
+      this.map = textureLoader.load("images/allow2.png");
       this.map.wrapS = THREE.RepeatWrapping;
       this.map.wrapT = THREE.RepeatWrapping;
-      this.map.repeat.set(20, 1);
+      this.map.repeat.set(70, 1);
       // this.map.rotation = Math.PI;
+      this.map.offset.y = 0.65;
       let material = new THREE.MeshBasicMaterial({
         color: 0x85a9a9,
         side: 200,
@@ -157,11 +161,11 @@ function initMap() {
       // tube1.rotation.x = Math.PI * 0.1;
       this.scene.add(tube1);
 
-      let tubeGeometry2 = new THREE.TubeGeometry(curve, 20, 8, 8, false);
+      let tubeGeometry2 = new THREE.TubeGeometry(curve, 20, 10, 8, false);
       let tubeMaterial2 = new THREE.MeshPhongMaterial({
         color: 0x9988ff,
         transparent: true,
-        opacity: 1,
+        opacity: 0.5,
       });
       let tube2 = new THREE.Mesh(tubeGeometry2, tubeMaterial2);
       this.scene.add(tube2);
