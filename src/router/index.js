@@ -37,6 +37,10 @@ const routes = [
     path: "/loadModel",
     component: () => import("../components/loadModel.vue"),
   },
+  {
+    path: "/waterLoop",
+    component: () => import("../components/waterPool.vue"),
+  },
 ];
 const router = createRouter({
   history: createWebHistory(),

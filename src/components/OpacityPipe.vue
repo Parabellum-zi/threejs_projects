@@ -4,18 +4,19 @@
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
-// import * as dat from "dat.gui";
+import * as dat from "dat.gui";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-// import threeMethods from "../utils/index.js";
 
+import threeUniversal from "../utils/threeUniversal";
 let scene = reactive({});
 let camera = reactive({});
 let renderer = reactive({});
 let orbitControls = reactive({});
 const sceneContainer = ref(null);
 // let geometry = reactive({});
-// let gui = new dat.GUI();
+let gui;
+let material;
 // let clock = new THREE.Clock();
 const pointsArr = [
   [-80, -20, 0],
@@ -75,6 +76,7 @@ onMounted(() => {
   resize();
   initPipeConf();
   animate();
+  // initGui();
 });
 
 function initScene() {
@@ -109,10 +111,9 @@ function initRenderer() {
   renderer.setPixelRatio(window.devicePixelRatio);
   // 消除canvas的外边框
   renderer.domElement.style.outline = "none";
-  sceneContainer.value.appendChild(renderer.domElement);
   // 设置背景色
   renderer.setClearColor(new THREE.Color("#21282a"), 1);
-  // renderer.setClearColor(new THREE.Color("#69c1de"), 1);
+  sceneContainer.value.appendChild(renderer.domElement);
 }
 
 function initControls() {
@@ -137,7 +138,7 @@ function initPointLight() {
   pointLight.position.y = 3;
   pointLight.position.z = 4;
   scene.add(ambientLight);
-  scene.add(pointLight);
+  // scene.add(pointLight);
 }
 
 function resize() {
@@ -172,26 +173,61 @@ function animate(time) {
 }
 
 function initPipeConf() {
+  const path = new THREE.Path();
+
+  path.lineTo(0, 0.8);
+  path.quadraticCurveTo(0, 1, 0.2, 1);
+  path.lineTo(1, 1);
+
+  const points = path.getPoints();
+
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+  const line = new THREE.Line(geometry, material);
+  scene.add(line);
+
+  threeUniversal.addFloor(scene);
+
   const transparentConf = {
     points: pointsArr,
     color: 0x4488ff,
-    radius: 4,
-    opacity: 0.3,
+    radius: 3,
+    opacity: 0.1,
   };
 
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/allow3.png",
-    radius: 1,
+    texture: "images/allow2.png",
+    radius: 1.5,
   };
   // 创建管道
-  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  // scene.add(pipe0);
+  scene.add(pipe0);
   scene.add(pipe1);
-  return { tubeTexture1 };
-  // return { tubeTexture0, tubeTexture1 };
+  // return { tubeTexture1 };
+
+  /* let stripMesh;
+  // 管中心平面
+  const stripGeo = new THREE.PlaneGeometry(50, 100);
+  const stripMat = new THREE.MeshBasicMaterial({
+    map: texture,
+    opacity: 1,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
+  });
+  stripMesh = new THREE.Mesh(stripGeo, stripMat);
+  scene.add(stripMesh);*/
+  // stripMesh.rotation.z = Math.PI * 0.5;
+  // stripMesh.rotation.y = Math.PI * 0.5;
+  // stripMesh.rotation.x = Math.PI * 0.5;
+
+  return { tubeTexture0, tubeTexture1 };
+  // return { tubeTexture1 };
 }
 
 /**
@@ -217,16 +253,65 @@ function getTextCanvas(text) {
   return canvas;
 }
 
+//初始化dat.GUI简化试验流程
+function initGui() {
+  //声明一个保存需求修改的相关数据的对象
+  gui = {
+    offsetX: 0,
+    offsetY: 0,
+    repeatX: 1,
+    repeatY: 1,
+    rotation: 0,
+    centerX: 0.5,
+    centerY: 0.5,
+    RepeatWrapping: true,
+  };
+  let datGui = new dat.GUI();
+  //将设置属性添加到gui当中，gui.add(对象，属性，最小值，最大值）
+  datGui.add(gui, "offsetX", 0.0, 1.0).onChange(updateUV);
+  datGui.add(gui, "offsetY", 0.0, 1.0).onChange(updateUV);
+  datGui.add(gui, "repeatX", 0.25, 2.0).onChange(updateUV);
+  datGui.add(gui, "repeatY", 0.25, 2.0).onChange(updateUV);
+  datGui.add(gui, "rotation", -2.0, 2.0).onChange(updateUV);
+  datGui.add(gui, "centerX", 0.0, 1.0).onChange(updateUV);
+  datGui.add(gui, "centerY", 0.0, 1.0).onChange(updateUV);
+  datGui.add(gui, "RepeatWrapping").onChange(function (e) {
+    if (e) {
+      material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping; //设置为可循环
+    } else {
+      material.map.wrapS = material.map.wrapT = THREE.ClampToEdgeWrapping; //设置会默认的最后一像素伸展
+    }
+
+    material.map.needsUpdate = true;
+  });
+}
+
+//更新纹理贴图的方法
+function updateUV() {
+  // 一种方法，直接全写在一个方法内
+  //texture.matrix.setUvTransform( API.offsetX, API.offsetY, API.repeatX, API.repeatY, API.rotation, API.centerX, API.centerY );
+
+  // 另一种方法，分开写
+  material.map.matrix
+    .identity() //矩阵重置
+    .translate(-gui.centerX, -gui.centerY) //设置中心点
+    .rotate(gui.rotation) // 旋转
+    .scale(gui.repeatX, gui.repeatY) //缩放
+    .translate(gui.centerX, gui.centerY) //设置中心点
+    .translate(gui.offsetX, gui.offsetY); //偏移
+}
+
 /**
  *  创建管线
  *  https://threejs.org/docs/index.html?q=TubeGeometry#api/en/geometries/TubeGeometry
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 15);
+  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 15, false);
 
   const textureLoader = new THREE.TextureLoader();
   let material;
+
   if (conf.texture !== undefined) {
     texture = textureLoader.load(conf.texture); // 图片贴图
     // texture = new THREE.CanvasTexture(getTextCanvas("➯ ➮ ➯")); // 文本贴图
@@ -235,23 +320,23 @@ function creatPipe(conf) {
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.x = 10;
-    texture.repeat.y = 2; // Y轴方向重复
-
+    texture.repeat.set(10, 1);
+    // texture.rotation = Math.PI;
     // 图片贴图
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
-    /*    material = new THREE.MeshPhongMaterial({
+    material = new THREE.MeshPhongMaterial({
       map: texture,
       transparent: true,
-    });*/
+      depthTest: false, // 深度检测
+    });
 
     //尝试使用文本贴图
-    material = new THREE.MeshBasicMaterial({
+    /*    material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      // opacity: 0.1,
+      opacity: 1,
       color: conf.color,
-    });
+    });*/
   } else {
     material = new THREE.MeshPhongMaterial({
       // map: texture,
