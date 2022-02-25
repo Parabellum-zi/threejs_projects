@@ -16,15 +16,10 @@ import Basemap from "@arcgis/core/Basemap";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 import SceneLayer from "@arcgis/core/layers/SceneLayer";
 import Graphic from "@arcgis/core/Graphic";
-
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
 import CoordTrans from "../utils/coordTrans";
 const sceneContainer = ref(null);
-// let scene = reactive({});
-// let camera = reactive({});
-// let renderer = reactive({});
-// let orbitControls = reactive({});
 
 let pointsArr = reactive([]);
 
@@ -56,6 +51,14 @@ function initArcMap() {
     container: sceneContainer.value,
     map: map,
     zoom: 9.8,
+    environment: {
+      background: {
+        type: "color",
+        color: [216, 214, 209, 0.3],
+      },
+      starsEnabled: false,
+      atmosphereEnabled: true,
+    },
   });
   view.when((view) => {
     let center = view.extent.center;
@@ -73,14 +76,14 @@ function initArcMap() {
   map.ground.opacity = 0.3;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   map.ground.navigationConstraint = { type: "none" };
-  // 图层
+  // 管网图层
   let sceneLayer = new SceneLayer({
     id: "sceneLayer",
     // url: 'https://gis.swj.gz.gov.cn/server/rest/services/Hosted/PQWSG20220113/SceneServer', // 域名
     // url: "http://10.194.171.119/server/rest/services/Hosted/DWDPWSJCS20220122/SceneServer", // ip
     url: "http://10.194.171.3/server/rest/services/eslpk/XFWWSGX20211215/SceneServer",
   });
-  map.add(sceneLayer);
+  // map.add(sceneLayer);
 
   registerRenderer();
 }
@@ -237,9 +240,11 @@ function pointTransform(longitude, latitude, height) {
 function initPipeConf() {
   const transparentConf = {
     points: pointsArr,
-    color: 0x4488ff,
-    radius: 3,
-    opacity: 0.6,
+    // color: RGB(231, 179, 37),
+    color: 0xffff00,
+    radius: 1.5,
+    // texture: "images/opacity4.png",
+    // opacity: 0.6,
   };
   // 管道内流动的液体
   const conf = {
@@ -250,11 +255,10 @@ function initPipeConf() {
   // 创建管道
   const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  // scene.add(pipe0);
   myExternalRenderer.scene.add(pipe0);
   myExternalRenderer.scene.add(pipe1);
   return { tubeTexture0, tubeTexture1 };
-
+  // return { tubeTexture1 };
   /* // 尝试构建管中心平面
   const stripGeo = new THREE.PlaneBufferGeometry(1.7, 10);
   const stripMat = new THREE.MeshBasicMaterial({
@@ -270,7 +274,6 @@ function initPipeConf() {
   stripMesh.rotation.z = Math.PI * 0.5;
   // stripMesh.rotation.y = Math.PI * 0.5;
   stripMesh.rotation.x = Math.PI * 0.5;*/
-  // return { tubeTexture1 };
 }
 function addGraphic(view) {
   view.graphics.add(
@@ -312,14 +315,14 @@ function creatPipe(conf) {
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.set(50, 2);
+    texture.repeat.set(50, 1);
     texture.offset.y = 0.5;
     texture.rotation = Math.PI; // 旋转贴图方向
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     material = new THREE.MeshPhongMaterial({
       map: texture,
       transparent: true,
-      alphaTest: 0.01, // 解决了贴图的透明部分显示为黑色
+      // alphaTest: 0.01, // 解决了贴图的透明部分显示为黑色
       side: THREE.DoubleSide, // 双面渲染，不留阴影。
     });
     // });

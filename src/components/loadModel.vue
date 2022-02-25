@@ -15,13 +15,18 @@ import { onMounted, reactive, ref } from "vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-
+import { ColladaLoader } from "three/examples/jsm/loaders/ColladaLoader.js";
+import threeUniversal from "../utils/threeUniversal.js";
 let scene = reactive({});
 let camera = reactive({});
 let renderer = reactive({});
 let orbitControls = reactive({});
 const sceneContainer = ref(null);
 let loadedGltf = [];
+let animationAction;
+let mixer;
+const clock = new THREE.Clock();
+
 onMounted(() => {
   initScene();
   initCamera();
@@ -35,6 +40,7 @@ onMounted(() => {
 
 function initScene() {
   scene = new THREE.Scene();
+  threeUniversal.initStats();
 }
 
 function initCamera() {
@@ -45,7 +51,7 @@ function initCamera() {
     0.1,
     1000
   ); // 视野角度 , 宽高比， 近截面（near）和远截面（far）
-  camera.position.set(-80, 30, 100); // 设置相机位置
+  camera.position.set(5, 10, 10); // 设置相机位置
   // camera.position.set(113, 23, 100); // 设置相机位置
   // camera.position.set(-3000000, 6000000, 3000000); // 设置相机位置
   // camera.position.z = 3;
@@ -117,9 +123,20 @@ function resize() {
   });
 }
 
+function render() {
+  let time = clock.getDelta();
+  if (mixer) {
+    mixer.update(time);
+  }
+  orbitControls.update();
+}
+
 function animate(time) {
   time *= 0.001;
   modelChange(time);
+  render();
+
+  threeUniversal.stats.update();
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
@@ -170,16 +187,37 @@ function changePosition(parts, time) {
 }
 
 function loadModel() {
-  const loader = new GLTFLoader();
+  // const loader = new GLTFLoader();
+  const loader = new ColladaLoader();
   loader.load(
-    "static/model/CVT.gltf",
+    // "static/model/CVT.gltf",
+    // "static/model/plant.gltf",
+    "static/model/stormtrooper.dae",
     (gltf) => {
-      scene.add(gltf.scene);
-      console.log(dumpObject(gltf.scene).join("\n"));
-      loadedGltf.push(gltf.scene.getObjectByName("Mesh206"));
-      loadedGltf.push(gltf.scene.getObjectByName("Mesh207"));
-      loadedGltf.push(gltf.scene.getObjectByName("Mesh208"));
-      loadedGltf.push(gltf.scene.getObjectByName("Mesh120"));
+      console.log(gltf);
+      scene.add(gltf.scene); //gltf.scene 添加了所有场景
+
+      //添加骨骼辅助
+      let meshHelper = new THREE.SkeletonHelper(gltf.scene);
+      scene.add(meshHelper);
+
+      // console.log(threeUniversal.dumpObject(gltf.scene).join("\n"));
+      // loadedGltf.push(gltf.scene.getObjectByName("Mesh206"));
+      // loadedGltf.push(gltf.scene.getObjectByName("Mesh207"));
+      // loadedGltf.push(gltf.scene.getObjectByName("Mesh208"));
+      // loadedGltf.push(gltf.scene.getObjectByName("Mesh120"));
+
+      // 调用动画
+      //AnimationMixer是场景中特定对象的动画播放器。当场景中的多个对象独立动画时，可以为每个对象使用一个AnimationMixer
+      // let mixer = new THREE.AnimationMixer(camera); // 相当于设置好关键帧播放器
+      mixer = new THREE.AnimationMixer(gltf.scene); // 相当于设置好关键帧播放器
+
+      animationAction = mixer.clipAction(gltf.animations[0]);
+      // 设置动画播放时长(秒，重复次数)
+      // animationAction.setDuration(1).setLoop(THREE.LoopRepeat);
+      animationAction.play();
+
+      // gltf.scene.rotation.z += Math.PI;
     },
     (xhr) => {
       console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
@@ -188,31 +226,6 @@ function loadModel() {
       console.error(error);
     }
   );
-}
-
-/**
- * 参考自 https://threejs.org/manual/#en/load-gltf
- * 获取模型中的所有节点及子节点
- * @param obj
- * @param lines
- * @param isLast
- * @param prefix
- * @returns {*[]}
- */
-function dumpObject(obj, lines = [], isLast = true, prefix = "") {
-  const localPrefix = isLast ? "└─" : "├─";
-  lines.push(
-    `${prefix}${prefix ? localPrefix : ""}${obj.name || "*no-name*"} [${
-      obj.type
-    }]`
-  );
-  const newPrefix = prefix + (isLast ? "  " : "│ ");
-  const lastNdx = obj.children.length - 1;
-  obj.children.forEach((child, ndx) => {
-    const isLast = ndx === lastNdx;
-    dumpObject(child, lines, isLast, newPrefix);
-  });
-  return lines;
 }
 </script>
 

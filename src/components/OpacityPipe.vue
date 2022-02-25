@@ -173,19 +173,15 @@ function animate(time) {
 }
 
 function initPipeConf() {
-  const path = new THREE.Path();
-
+  /* const path = new THREE.Path();
   path.lineTo(0, 0.8);
   path.quadraticCurveTo(0, 1, 0.2, 1);
   path.lineTo(1, 1);
-
   const points = path.getPoints();
-
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
   const material = new THREE.LineBasicMaterial({ color: 0xffffff });
-
   const line = new THREE.Line(geometry, material);
-  scene.add(line);
+  scene.add(line);*/
 
   threeUniversal.addFloor(scene);
 
@@ -343,7 +339,7 @@ function creatPipe(conf) {
       color: conf.color,
       transparent: true,
       opacity: conf.opacity,
-      depthWrite: false,
+      depthWrite: false, // 为true内部流动的液体会被遮挡无法显示
     });
   }
   const mesh = new THREE.Mesh(geometry, material);
