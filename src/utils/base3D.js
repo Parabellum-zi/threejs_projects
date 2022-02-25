@@ -2,19 +2,20 @@ import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 // 导入轨道控制器
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+// 第一人称
+import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls";
 // 模型解析
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 class Base3D {
   constructor(selector) {
     this.container = document.querySelector(selector);
-    this.scene;
-    this.camera;
-    this.renderer;
-    this.orbitControls;
-    this.model;
+    this.scene = {};
+    this.camera = {};
+    this.renderer = {};
+    this.orbitControls = {};
+    this.model = {};
     this.init();
-    this.animation();
   }
 
   init() {
@@ -22,8 +23,9 @@ class Base3D {
     this.initCamera();
     this.initRenderer();
     this.initControls();
+    this.initLight();
+    this.animation();
     this.resize();
-    this.addModels();
   }
   initScene() {
     this.scene = new THREE.Scene();
@@ -58,9 +60,43 @@ class Base3D {
       this.camera,
       this.renderer.domElement
     );
+    this.orbitControls.enableDamping = true; // 惯性
+    this.orbitControls.dampingFactor = 0.25; // 动态阻尼系数
+    this.orbitControls.enableZoom = true; // 缩放
+    this.orbitControls.enablePan = true; // 右键拖拽
+    // orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
+    // orbitControls.minAzimuthAngle = -Math.PI / 6;
+    // orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
+    // orbitControls.minPolarAngle = -Math.PI / 6;
 
     const axesHelper = new THREE.AxesHelper(100);
     this.scene.add(axesHelper);
+  }
+  initLight() {
+    const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
+    const pointLight = new THREE.PointLight(0xffffff, 0.6);
+    pointLight.position.x = 2;
+    pointLight.position.y = 3;
+    pointLight.position.z = 4;
+    this.scene.add(ambientLight);
+    this.scene.add(pointLight);
+  }
+  /**
+   * 第一人称视角控制
+   */
+  initFirstPersonControls() {
+    this.orbitControls = new FirstPersonControls(
+      this.camera,
+      this.renderer.domElement
+    );
+    this.orbitControls.lookSpeed = 0.1; //鼠标移动查看的速度
+    this.orbitControls.movementSpeed = 10; //相机移动速度
+    this.orbitControls.noFly = true;
+    this.orbitControls.constrainVertical = true; //约束垂直
+    this.orbitControls.verticalMin = 1.0;
+    this.orbitControls.verticalMax = 2.0;
+    this.orbitControls.lon = -100; //进入初始视角x轴的角度
+    this.orbitControls.lat = 0; //初始视角进入后y轴的角度
   }
   setEvnMap(hdr) {
     new RGBELoader().setPath("images/hdr/").load(hdr + ".hdr", (texture) => {
@@ -71,6 +107,7 @@ class Base3D {
     });
   }
   render() {
+    this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
   }
   animation() {
@@ -109,8 +146,8 @@ class Base3D {
       console.log(res);
     });
   }
-  addModels() {
-    this.loadModels("CVT.gltf");
+  addModels(modelName) {
+    this.loadModels(modelName);
   }
 }
 export default Base3D;
