@@ -1,7 +1,7 @@
 import Stats from "three/examples/jsm/libs/stats.module";
 import * as THREE from "three";
 let threeUniversal = {
-  stats: {}, // FPS
+  stats: {}, // FPS (plugin)
   /**
    * 参考自 https://threejs.org/manual/#en/load-gltf
    * 获取模型中的所有节点及子节点
@@ -31,8 +31,11 @@ let threeUniversal = {
     threeUniversal.stats = new Stats();
     document.body.appendChild(threeUniversal.stats.dom);
   },
+  /**
+   * 添加地板
+   * @param scene
+   */
   addFloor: function (scene) {
-    // 地板
     let mesh = new THREE.Mesh(
       new THREE.PlaneBufferGeometry(500, 500),
       new THREE.MeshPhongMaterial({ color: 0xffffff, depthWrite: false })
