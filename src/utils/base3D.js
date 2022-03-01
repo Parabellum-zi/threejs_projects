@@ -9,7 +9,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 class Base3D {
   constructor(selector) {
-    this.container = document.querySelector(selector);
+    // this.container = document.querySelector(selector);
+    this.container = selector;
     this.scene = {};
     this.camera = {};
     this.renderer = {};
@@ -137,7 +138,7 @@ class Base3D {
       const loader = new GLTFLoader();
       loader.load("static/model/" + model, (gltf) => {
         // this.model = gltf.scene.children[0];
-        console.log(gltf);
+        // console.log(gltf);
         this.model = gltf.scene;
         this.scene.add(this.model);
         resolve("model loaded");
@@ -145,9 +146,6 @@ class Base3D {
     }).then((res) => {
       console.log(res);
     });
-  }
-  addModels(modelName) {
-    this.loadModels(modelName);
   }
 }
 export default Base3D;

@@ -50,6 +50,31 @@ let threeUniversal = {
     grid.material.transparent = true;
     scene.add(grid);
   },
+  /**
+   * Access to click on the location of the 3d coordinate
+   * @param event
+   * @param data3D
+   */
+  getDocumentMouseDownCoord: function (event, data3D) {
+    event.preventDefault();
+    let vector = new THREE.Vector3(); //三维坐标对象
+    vector.set(
+      (event.clientX / window.innerWidth) * 2 - 1,
+      -(event.clientY / window.innerHeight) * 2 + 1,
+      0.5
+    );
+    vector.unproject(data3D.camera);
+    let rayCaster = new THREE.Raycaster(
+      data3D.camera.position,
+      vector.sub(data3D.camera.position).normalize()
+    );
+    let intersects = rayCaster.intersectObjects(data3D.scene.children);
+    if (intersects.length < 0) return;
+    let selected = intersects[0]; //取第一个物体
+    let { x, y, z } = selected.point;
+    console.log("x: ", x, "y： ", y, "z:", z);
+    return { x, y, z };
+  },
 };
 
 export default threeUniversal;

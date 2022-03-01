@@ -41,6 +41,10 @@ const routes = [
     path: "/waterLoop",
     component: () => import("../components/waterPool.vue"),
   },
+  {
+    path: "/getClickCoordinates",
+    component: () => import("../components/liedeScene.vue"),
+  },
 ];
 const router = createRouter({
   history: createWebHistory(),
