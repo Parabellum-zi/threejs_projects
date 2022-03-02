@@ -1,4 +1,5 @@
 import * as THREE from "three";
+
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 // 导入轨道控制器
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -6,6 +7,13 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls";
 // 模型解析
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+
+import ResourceTracker from "./ResourceTracker";
+import Stats from "three/examples/jsm/libs/stats.module";
+
+let stats;
+let resMgr = new ResourceTracker();
+const track = resMgr.track.bind(resMgr);
 
 class Base3D {
   constructor(selector) {
@@ -26,20 +34,22 @@ class Base3D {
     this.initControls();
     this.initLight();
     this.animation();
+    this.initStats();
     this.resize();
   }
   initScene() {
     this.scene = new THREE.Scene();
     // this.setEvnMap("solitude_night");
+    // this.setEvnMap("drackenstein");
   }
   initCamera() {
     this.camera = new THREE.PerspectiveCamera(
-      45,
+      75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      10000
     );
-    this.camera.position.set(-1.8, 100, 2.7);
+    this.camera.position.set(0, 100, 0);
   }
   initRenderer() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true }); //antialias 抗锯齿
@@ -62,7 +72,7 @@ class Base3D {
       this.renderer.domElement
     );
     this.orbitControls.enableDamping = true; // 惯性
-    this.orbitControls.dampingFactor = 0.25; // 动态阻尼系数
+    this.orbitControls.dampingFactor = 0.15; // 动态阻尼系数
     this.orbitControls.enableZoom = true; // 缩放
     this.orbitControls.enablePan = true; // 右键拖拽
     // orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
@@ -70,7 +80,7 @@ class Base3D {
     // orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
     // orbitControls.minPolarAngle = -Math.PI / 6;
 
-    const axesHelper = new THREE.AxesHelper(100);
+    const axesHelper = new THREE.AxesHelper(50);
     this.scene.add(axesHelper);
   }
   initLight() {
@@ -109,7 +119,14 @@ class Base3D {
   }
   render() {
     this.renderer.clear();
+    stats.update();
     this.renderer.render(this.scene, this.camera);
+  }
+  //初始化性能插件
+  initStats() {
+    stats = new Stats();
+    stats.showPanel(0);
+    document.body.appendChild(stats.dom);
   }
   animation() {
     this.renderer.setAnimationLoop(this.render.bind(this));
@@ -136,13 +153,18 @@ class Base3D {
   loadModels(model) {
     return new Promise((resolve, reject) => {
       const loader = new GLTFLoader();
-      loader.load("static/model/" + model, (gltf) => {
-        // this.model = gltf.scene.children[0];
-        // console.log(gltf);
-        this.model = gltf.scene;
-        this.scene.add(this.model);
-        resolve("model loaded");
-      });
+      loader.load(
+        "static/model/" + model,
+        (gltf) => {
+          // this.model = gltf.scene.children[0];
+          // console.log(gltf);
+          this.model = track(gltf.scene);
+          this.scene.add(this.model);
+          resolve("model loaded");
+        },
+        undefined,
+        reject
+      );
     }).then((res) => {
       console.log(res);
     });
