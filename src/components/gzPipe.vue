@@ -19,6 +19,7 @@ import Graphic from "@arcgis/core/Graphic";
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
 import CoordTrans from "../utils/coordTrans";
+
 const sceneContainer = ref(null);
 
 let pointsArr = reactive([]);
@@ -26,7 +27,6 @@ let pointsArr = reactive([]);
 let texture;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
-let stripMesh;
 onBeforeMount(() => {
   getYsdData();
 });
@@ -73,7 +73,7 @@ function initArcMap() {
   view.ui.remove(["attribution", "zoom"]);
   view.ui.empty("top-left");
   window.view = view;
-  map.ground.opacity = 0.3;
+  map.ground.opacity = 0.2;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   map.ground.navigationConstraint = { type: "none" };
   // 管网图层
@@ -240,16 +240,14 @@ function pointTransform(longitude, latitude, height) {
 function initPipeConf() {
   const transparentConf = {
     points: pointsArr,
-    // color: RGB(231, 179, 37),
-    color: 0xffff00,
+    color: 0xffaa00,
     radius: 1.5,
-    // texture: "images/opacity4.png",
     // opacity: 0.6,
   };
   // 管道内流动的液体
   const conf = {
     points: pointsArr,
-    texture: "images/allow2.png",
+    texture: "images/allow_sewage.png",
     radius: 1.5,
   };
   // 创建管道
@@ -300,8 +298,6 @@ function addGraphic(view) {
 function creatPipe(conf) {
   const path = createPath(conf.points);
   const geometry = new THREE.TubeGeometry(path, 3000, conf.radius, 5, false);
-  // console.log(geometry);
-  // geometry.segments = 1;
   const textureLoader = new THREE.TextureLoader();
   let material;
   if (conf.texture !== undefined) {
@@ -315,7 +311,7 @@ function creatPipe(conf) {
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.set(50, 1);
+    texture.repeat.set(150, 1);
     texture.offset.y = 0.5;
     texture.rotation = Math.PI; // 旋转贴图方向
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture

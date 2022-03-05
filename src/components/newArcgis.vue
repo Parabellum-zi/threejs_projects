@@ -17,12 +17,9 @@ import SceneView from "@arcgis/core/views/SceneView";
 import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers"; //外部渲染器
 import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils";
 // import SpatialReference from "@arcgis/core/geometry/SpatialReference";
-
+import ResourceTracker from "../utils/ResourceTracker";
+import Stats from "three/examples/jsm/libs/stats.module";
 const sceneContainer = ref(null);
-// let scene = reactive({});
-// let camera = reactive({});
-// let renderer = reactive({});
-// let orbitControls = reactive({});
 // 以广州附近的点为示例
 const pointsArr = [
   [115.80895340787583, 30.92933111293343, 20],
@@ -45,13 +42,20 @@ const pointsArr = [
   [115.86174910808289, 30.993473404196706, 20],
   [115.86231959908358, 30.99068362090549, 20],
 ];
-
 let texture;
+let material;
+let mesh;
+let geometry;
 const colors = ["#ffff00", "#00ffe2", "#9800ff", "#ff6767"];
 let color = colors[Math.floor(Math.random() * colors.length)];
-
+const resMgr = new ResourceTracker();
+const track = resMgr.track.bind(resMgr);
+let sceneAdd = reactive({});
+let stats;
 onMounted(() => {
   initArcMap();
+  initStats();
+  iterativeScene();
 });
 
 /**
@@ -73,6 +77,14 @@ function initArcMap() {
   let view = new SceneView({
     container: sceneContainer.value,
     map: map,
+    environment: {
+      background: {
+        type: "color",
+        color: [216, 214, 209, 0.3],
+      },
+      starsEnabled: false,
+      atmosphereEnabled: true,
+    },
     camera: {
       // position: [113.23, 23.16, 2630.6413883436],
       position: [115.87107, 30.9969, 1315],
@@ -83,10 +95,15 @@ function initArcMap() {
   view.ui.empty("top-left");
   window.view = view;
 
-  // map.ground.opacity = 0.5;
+  map.ground.opacity = 0.5;
   // 开启地下导航模式 可选属性值 {none: 地下} / {stay-above:地上}
   // map.ground.navigationConstraint = { type: "none" };
-  registerRenderer();
+}
+
+function initStats() {
+  stats = new Stats();
+  stats.showPanel(0);
+  document.body.appendChild(stats.dom);
 }
 
 /**
@@ -103,16 +120,19 @@ function initArcMap() {
  * @date 2022/1/5
  * @type {{setup: myExternalRenderer.setup, render: myExternalRenderer.render}}
  */
-let myExternalRenderer = {
-  view: window.view,
-  scene: null, // three.js 中的场景
-  camera: null, // three.js 相机
-  renderer: null, // three.js 渲染器
+class MyExternalRenderer {
+  constructor(option) {
+    this.view = option;
+    this.scene = null; // three.js 中的场景
+    this.camera = null; // three.js 相机
+    this.renderer = null; // three.js 渲染器
+  }
+
   /**
    * Setup function, called once by the ArcGIS JS API.
    注册对象时被调用,只调用一次,用于初始化three.js创建的对象
    */
-  setup: function (context) {
+  setup(context) {
     this.renderer = new THREE.WebGLRenderer({
       context: context.gl, // 可用于将渲染器附加到已有的渲染环境(RenderingContext)中
       premultipliedAlpha: false, // renderer是否假设颜色有 premultiplied alpha. 默认为true
@@ -156,11 +176,9 @@ let myExternalRenderer = {
     // 更新view的resolution, 在场景中渲染管线等需要此句之后
     this.scene.userData.viewResolution = window.view.resolution;
     //  基础配置结束
-
     initPipeConf(this.scene);
-    // createCircle(pointsArr[0]);
-  },
-  render: function (context) {
+  }
+  render(context) {
     // 更新相机参数
     const cam = context.camera;
     this.camera.position.set(cam.eye[0], cam.eye[1], cam.eye[2]);
@@ -171,8 +189,11 @@ let myExternalRenderer = {
     // 投影矩阵可以直接复制
     this.camera.projectionMatrix.fromArray(cam.projectionMatrix);
     // animate start
-    texture.offset.x += -0.001; // 贴图运动速度
-    texture.needsUpdate = true;
+    if (texture) {
+      texture.offset.x += -0.005; // 贴图运动速度
+      texture.needsUpdate = true;
+    }
+    stats.update();
     // requestAnimationFrame(animate);
     this.renderer.render(this.scene, this.camera);
     // resize start
@@ -201,12 +222,16 @@ let myExternalRenderer = {
     externalRenderers.requestRender(window.view);
     // cleanup
     context.resetWebGLState();
-  },
-};
+  }
+}
 
 function registerRenderer() {
+  // console.log(myExternalRenderer, window.view);
   // 向SceneView实例注册外部渲染器
-  externalRenderers.add(window.view, myExternalRenderer);
+  console.log(sceneAdd);
+  sceneAdd = null;
+  sceneAdd = new MyExternalRenderer(window.view);
+  externalRenderers.add(window.view, sceneAdd);
 }
 
 /**
@@ -252,10 +277,12 @@ function initPipeConf() {
     radius: 3,
   };
   // 创建管道
-  // const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
+  const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  // myExternalRenderer.scene.add(pipe0);
-  myExternalRenderer.scene.add(pipe1);
+
+  console.log(sceneAdd);
+  sceneAdd.scene.add(track(pipe0));
+  sceneAdd.scene.add(track(pipe1));
   // return { tubeTexture0, tubeTexture1 };
   return { tubeTexture1 };
 }
@@ -265,9 +292,9 @@ function initPipeConf() {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 20, false);
+  geometry = track(new THREE.TubeGeometry(path, 100, conf.radius, 20, false));
   const textureLoader = new THREE.TextureLoader();
-  let material;
+
   if (conf.texture !== undefined) {
     texture = textureLoader.load(conf.texture, () => {
       /*     //点光源
@@ -286,20 +313,21 @@ function creatPipe(conf) {
     texture.wrapT = THREE.RepeatWrapping;
     // 设置x方向的偏移(沿着管道路径方向)，y方向默认1
     // 等价texture.repeat= new THREE.Vector2(3,1)
-    texture.repeat.set(300, 4); // x,y 贴图重复
+    texture.repeat.set(300, 1); // x,y 贴图重复
     texture.offset.y = 0.15; //设置管道纹理偏移
 
     // // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
     // material = new THREE.MeshPhongMaterial({
-    material = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      // opacity: 0.99,
-      // side: THREE.DoubleSide,
-      alphaTest: 0.01, // 解决了贴图的透明部分显示为黑色
-      // depthTest: false, // 深度检测
-    });
-
+    material = track(
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        // opacity: 0.99,
+        side: THREE.DoubleSide,
+        // alphaTest: 0.01, // 解决了贴图的透明部分显示为黑色
+        // depthTest: false, // 深度检测
+      })
+    );
     /*  //尝试使用文本贴图
     material = new THREE.MeshBasicMaterial({
       /!*map: texture,
@@ -314,15 +342,17 @@ function creatPipe(conf) {
       opacity: 1,
     });*/
   } else {
-    material = new THREE.MeshPhongMaterial({
-      color: conf.color,
-      transparent: true,
-      opacity: conf.opacity,
-    });
+    material = track(
+      new THREE.MeshPhongMaterial({
+        color: conf.color,
+        transparent: true,
+        opacity: conf.opacity,
+      })
+    );
     material.depthWrite = false;
   }
 
-  const mesh = new THREE.Mesh(geometry, material);
+  mesh = track(new THREE.Mesh(geometry, material));
   return { texture, mesh };
 }
 
@@ -427,6 +457,38 @@ function createCircle(Point) {
   circleMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2); // 再沿X轴旋转90°
   // circleMesh.visible = false;
   scene.add(circleMesh);
+}
+
+function dispose(seconds = 0) {
+  return new Promise((resolve) =>
+    setTimeout(() => {
+      resMgr.dispose();
+      this.renderer.dispose();
+      this.renderer.forceContextLoss();
+      this.renderer.content = null;
+      let gl = this.renderer.domElement.getContext("webgl");
+      gl && gl.getExtension("WEBGL_lose_context").loseContext();
+      console.log(this.renderer.info);
+    }, seconds * 1000)
+  );
+}
+
+function waitSeconds(seconds = 0) {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+}
+let count = 0;
+async function iterativeScene() {
+  for (;;) {
+    count++;
+    registerRenderer();
+
+    await waitSeconds(3);
+
+    resMgr.dispose();
+    console.log(sceneAdd.renderer.info.memory);
+    await waitSeconds(1);
+    console.log(count);
+  }
 }
 </script>
 

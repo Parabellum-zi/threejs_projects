@@ -40,7 +40,6 @@ onMounted(() => {
 
 function initScene() {
   scene = new THREE.Scene();
-  threeUniversal.initStats();
 }
 
 function initCamera() {
@@ -89,8 +88,8 @@ function initControls() {
   // orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
   // orbitControls.minPolarAngle = -Math.PI / 6;
 
-  // let axes = new THREE.AxesHelper(1000);
-  // scene.add(axes);
+  let axes = new THREE.AxesHelper(1000);
+  scene.add(axes);
 }
 
 function initPointLight() {
@@ -136,7 +135,6 @@ function animate(time) {
   modelChange(time);
   render();
 
-  threeUniversal.stats.update();
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
@@ -187,14 +185,18 @@ function changePosition(parts, time) {
 }
 
 function loadModel() {
-  // const loader = new GLTFLoader();
-  const loader = new ColladaLoader();
+  const loader = new GLTFLoader();
+  // const loader = new ColladaLoader();
   loader.load(
     // "static/model/CVT.gltf",
     // "static/model/plant.gltf",
-    "static/model/stormtrooper.dae",
+    // "static/model/stormtrooper.dae",
+    "static/model/animation.gltf",
     (gltf) => {
       console.log(gltf);
+      gltf.scene.scale.x = 100;
+      gltf.scene.scale.y = 100;
+      gltf.scene.scale.z = 100;
       scene.add(gltf.scene); //gltf.scene 添加了所有场景
 
       //添加骨骼辅助

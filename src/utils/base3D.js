@@ -40,16 +40,16 @@ class Base3D {
   initScene() {
     this.scene = new THREE.Scene();
     // this.setEvnMap("solitude_night");
-    // this.setEvnMap("drackenstein");
+    this.setEvnMap("drackenstein");
   }
   initCamera() {
     this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      10000
+      1000
     );
-    this.camera.position.set(0, 100, 0);
+    this.camera.position.set(0, 500, 0);
   }
   initRenderer() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true }); //antialias 抗锯齿
@@ -72,7 +72,7 @@ class Base3D {
       this.renderer.domElement
     );
     this.orbitControls.enableDamping = true; // 惯性
-    this.orbitControls.dampingFactor = 0.15; // 动态阻尼系数
+    this.orbitControls.dampingFactor = 0.25; // 动态阻尼系数
     this.orbitControls.enableZoom = true; // 缩放
     this.orbitControls.enablePan = true; // 右键拖拽
     // orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
@@ -157,7 +157,10 @@ class Base3D {
         "static/model/" + model,
         (gltf) => {
           // this.model = gltf.scene.children[0];
-          // console.log(gltf);
+          console.log(gltf);
+          gltf.scene.scale.x = 50;
+          gltf.scene.scale.y = 50;
+          gltf.scene.scale.z = 50;
           this.model = track(gltf.scene);
           this.scene.add(this.model);
           resolve("model loaded");
@@ -168,6 +171,19 @@ class Base3D {
     }).then((res) => {
       console.log(res);
     });
+  }
+  dispose(seconds = 0) {
+    return new Promise((resolve) =>
+      setTimeout(() => {
+        resMgr.dispose();
+        this.renderer.dispose();
+        this.renderer.forceContextLoss();
+        this.renderer.content = null;
+        let gl = this.renderer.domElement.getContext("webgl");
+        gl && gl.getExtension("WEBGL_lose_context").loseContext();
+        console.log(this.renderer.info);
+      }, seconds * 1000)
+    );
   }
 }
 export default Base3D;

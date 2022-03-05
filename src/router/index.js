@@ -42,8 +42,12 @@ const routes = [
     component: () => import("../components/waterPool.vue"),
   },
   {
-    path: "/getClickCoordinates",
+    path: "/liedeScene",
     component: () => import("../components/liedeScene.vue"),
+  },
+  {
+    path: "/water",
+    component: () => import("../components/water.vue"),
   },
 ];
 const router = createRouter({

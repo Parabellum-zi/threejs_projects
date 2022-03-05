@@ -7,14 +7,14 @@ import { onMounted, reactive, ref } from "vue";
 import * as dat from "dat.gui";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-
 import threeUniversal from "../utils/threeUniversal";
+import ResourceTracker from "../utils/ResourceTracker";
+import Base3D from "../utils/base3D";
 let scene = reactive({});
 let camera = reactive({});
-let renderer = reactive({});
-let orbitControls = reactive({});
+// let renderer = reactive({});
+// let orbitControls = reactive({});
 const sceneContainer = ref(null);
-// let geometry = reactive({});
 let gui;
 let material;
 // let clock = new THREE.Clock();
@@ -66,125 +66,33 @@ const pointsArr = [
 */
 
 let texture;
+const resMgr = new ResourceTracker();
+const track = resMgr.track.bind(resMgr);
+
+let data = reactive({
+  base3D: {},
+});
 
 onMounted(() => {
   initScene();
-  initCamera();
-  initRenderer();
-  initControls();
-  initPointLight();
-  resize();
-  initPipeConf();
+  iterativeScene();
   animate();
-  // initGui();
 });
 
 function initScene() {
-  scene = new THREE.Scene();
-}
-
-function initCamera() {
-  // 设置相机
-  camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  ); // 视野角度 , 宽高比， 近截面（near）和远截面（far）
-  camera.position.set(-80, 30, 100); // 设置相机位置
-  // camera.position.set(113, 23, 100); // 设置相机位置
-  // camera.position.set(-3000000, 6000000, 3000000); // 设置相机位置
-  // camera.position.z = 3;
-  scene.add(camera);
-}
-
-function initRenderer() {
-  // 设置渲染器
-  // renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });    // alpha: true 设置背景透明
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(
-    sceneContainer.value.clientWidth,
-    sceneContainer.value.clientHeight
-  );
-  // renderer.setClearColor(0xffffff); // 设置背景色
-  // 兼容高清屏幕
-  renderer.setPixelRatio(window.devicePixelRatio);
-  // 消除canvas的外边框
-  renderer.domElement.style.outline = "none";
-  // 设置背景色
-  renderer.setClearColor(new THREE.Color("#21282a"), 1);
-  sceneContainer.value.appendChild(renderer.domElement);
-}
-
-function initControls() {
-  orbitControls = new OrbitControls(camera, renderer.domElement);
-  orbitControls.enableDamping = true; // 惯性
-  orbitControls.dampingFactor = 0.25; // 动态阻尼系数
-  orbitControls.enableZoom = true; // 缩放
-  orbitControls.enablePan = true; // 右键拖拽
-  // orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
-  // orbitControls.minAzimuthAngle = -Math.PI / 6;
-  // orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
-  // orbitControls.minPolarAngle = -Math.PI / 6;
-
-  let axes = new THREE.AxesHelper(100);
-  scene.add(axes);
-}
-
-function initPointLight() {
-  const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
-  const pointLight = new THREE.PointLight(0xffffff, 0.6);
-  pointLight.position.x = 2;
-  pointLight.position.y = 3;
-  pointLight.position.z = 4;
-  scene.add(ambientLight);
-  // scene.add(pointLight);
-}
-
-function resize() {
-  const sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  };
-  window.addEventListener("resize", () => {
-    // Update sizes
-    sizes.width = window.innerWidth;
-    sizes.height = window.innerHeight;
-
-    // Update camera
-    camera.aspect = sizes.width / sizes.height;
-    camera.updateProjectionMatrix();
-
-    // Update renderer
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  });
+  data.base3D = new Base3D(sceneContainer.value);
+  threeUniversal.addFloor(data.base3D.scene);
+  // document.addEventListener("mousedown", onDocumentMouseDown);
 }
 
 function animate(time) {
   time *= 0.001;
-  // console.log(texture);
   texture.offset.x = -(time * 1) % 1; // 贴图运动速度
-  // texture.offset.x += 0.001;
-  // resize();
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
-  renderer.render(scene, camera);
 }
 
 function initPipeConf() {
-  /* const path = new THREE.Path();
-  path.lineTo(0, 0.8);
-  path.quadraticCurveTo(0, 1, 0.2, 1);
-  path.lineTo(1, 1);
-  const points = path.getPoints();
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({ color: 0xffffff });
-  const line = new THREE.Line(geometry, material);
-  scene.add(line);*/
-
-  threeUniversal.addFloor(scene);
-
   const transparentConf = {
     points: pointsArr,
     color: 0x4488ff,
@@ -201,9 +109,113 @@ function initPipeConf() {
   // 创建管道
   const { texture: tubeTexture0, mesh: pipe0 } = creatPipe(transparentConf);
   const { texture: tubeTexture1, mesh: pipe1 } = creatPipe(conf);
-  scene.add(pipe0);
-  scene.add(pipe1);
+  texture = tubeTexture1;
+  data.base3D.scene.add(track(pipe0));
+  data.base3D.scene.add(track(pipe1));
+  // console.log(scene);
   // return { tubeTexture1 };
+
+  // var radius = data[i]["Diameter"] - 0; // 管子的半径
+  /*
+  var radius = 3; // 管子的半径
+  var shape = new THREE.Shape();
+  shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+
+  var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
+  var v1 = new THREE.Vector3(0, 0, 0);
+  var v2 = new THREE.Vector3(100, 0, 0);
+
+  var path = new THREE.LineCurve3(v1, v2);
+
+  var extrudeSettings = {
+    bevelEnabled: false,
+    steps: 1,
+    extrudePath: path,
+  };
+
+  var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  var mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+*/
+
+  /*  let bb = [
+    [-10, 0, 0],
+    [0, 10, 0],
+    [10, 0, 0],
+  ];
+
+  let aa = {
+    points: bb,
+  };
+
+  const material1 = new THREE.LineBasicMaterial({
+    color: 0x0000ff,
+  });
+
+  // points.push(new THREE.Vector3(-10, 0, 0));
+  // points.push(new THREE.Vector3(0, 10, 0));
+  // points.push(new THREE.Vector3(10, 0, 0));
+  // console.log(points);
+  const geometry = new THREE.BufferGeometry().setFromPoints(aa.points);
+  creatPipe(aa);
+  const line = new THREE.Line(geometry, material1);
+  scene.add(line);*/
+  /* var point1 = new THREE.Vector3(4, 8, 9);
+
+  var geometry = new THREE.Geometry();
+  //定义线的颜色
+  // Parameters是一个定义材质外观的对象，它包含多个属性来定义材质，这些属性是：
+  // Color：线条的颜色，用16进制来表示，默认的颜色是白色。
+  // linewidth：线条的宽度，默认时候1个单位宽度。 这个参数设置了也没用
+  // Linecap：线条两端的外观，默认是圆角端点，当线条较粗的时候才看得出效果，如果线条很细，那么你几乎看不出效果了。
+  // Linejoin：两个线条的连接点处的外观，默认是“round”，表示圆角。
+  // VertexColors：定义线条材质是否使用顶点颜色，这是一个boolean值。意思是，线条各部分的颜色会根据顶点的颜色来进行插值。
+  // Fog：定义材质的颜色是否受全局雾效的影响。
+  var material = new THREE.LineBasicMaterial({
+    vertexColors: false,
+    color: 0xff0000,
+  });
+  var color1 = new THREE.Color(0xff0000);
+  let color2 = new THREE.Color(0xffff00);
+  // 创建点，此处创建并放到几何体里面两个点，是一条线段，三个点是一条折现
+  var p1 = new THREE.Vector3(-100, 0, 100);
+  var p2 = new THREE.Vector3(100, 0, -100);
+  var p3 = new THREE.Vector3(100, 0, 100);
+  geometry.vertices.push(p1);
+  geometry.vertices.push(p2);
+  geometry.vertices.push(p3);
+  //创建线   THREE.LineSegments 这个方法是创建线段的意思 有些文章里面 写的是THREE.LinePieces  但是在84版以后（我用的84版和107版）都不在支持了
+  var line = new THREE.Line(geometry, material, THREE.LineSegments);
+  //加入到场景
+  scene.add(line);*/
+
+  /*  var p1 = new THREE.Vector3(-85.35, -35.36, 0);
+  var p2 = new THREE.Vector3(-50, 0, 0);
+  var p3 = new THREE.Vector3(0, 50, 0);
+  var p4 = new THREE.Vector3(50, 0, 0);
+  var p5 = new THREE.Vector3(85.35, -35.36, 0);
+  // 创建线条一：直线
+  let line1 = new THREE.LineCurve3(p1, p2);
+  // 重建线条2：三维样条曲线
+  var curve = new THREE.CatmullRomCurve3([p2, p3, p4]);
+  // 创建线条3：直线
+  let line2 = new THREE.LineCurve3(p4, p5);
+  var CurvePath = new THREE.CurvePath(); // 创建CurvePath对象
+  CurvePath.curves.push(line1, curve, line2); // 插入多段线条
+  //通过多段曲线路径创建生成管道
+  //通过多段曲线路径创建生成管道，CCurvePath：管道路径
+  var geometry2 = new THREE.TubeGeometry(CurvePath, 100, 5, 25, false);
+  var material = new THREE.MeshLambertMaterial({});
+  material.map = textloader.load("../images/netline-on.jpg");
+  material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
+  material.map.needsUpdate = true;
+  var cube = new THREE.Mesh(geometry2, material);
+  cube.spead = 0.01;
+  cube.position.y = 300;
+  aaa.push(cube);
+  console.log(cube);
+  scene.add(cube);*/
 
   /* let stripMesh;
   // 管中心平面
@@ -303,7 +315,9 @@ function updateUV() {
  */
 function creatPipe(conf) {
   const path = createPath(conf.points);
-  const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 15, false);
+  const geometry = track(
+    new THREE.TubeGeometry(path, 100, conf.radius, 15, false)
+  );
 
   const textureLoader = new THREE.TextureLoader();
   let material;
@@ -320,11 +334,13 @@ function creatPipe(conf) {
     // texture.rotation = Math.PI;
     // 图片贴图
     // 模拟管线运动动画，将两个素材图按比例合并，然后生成贴图texture
-    material = new THREE.MeshPhongMaterial({
-      map: texture,
-      transparent: true,
-      depthTest: false, // 深度检测
-    });
+    material = track(
+      new THREE.MeshPhongMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false, // 深度检测
+      })
+    );
 
     //尝试使用文本贴图
     /*    material = new THREE.MeshBasicMaterial({
@@ -334,15 +350,17 @@ function creatPipe(conf) {
       color: conf.color,
     });*/
   } else {
-    material = new THREE.MeshPhongMaterial({
-      // map: texture,
-      color: conf.color,
-      transparent: true,
-      opacity: conf.opacity,
-      depthWrite: false, // 为true内部流动的液体会被遮挡无法显示
-    });
+    material = track(
+      new THREE.MeshPhongMaterial({
+        // map: texture,
+        color: conf.color,
+        transparent: true,
+        opacity: conf.opacity,
+        depthWrite: false, // 为true内部流动的液体会被遮挡无法显示
+      })
+    );
   }
-  const mesh = new THREE.Mesh(geometry, material);
+  const mesh = track(new THREE.Mesh(geometry, material));
   // mesh.rotation.z = Math.PI * 0.5; // 箭头方向
   mesh.rotation.x = Math.PI * 0.5; //修改箭头在管壁的位置
 
@@ -353,6 +371,45 @@ function createPath(pointsArr) {
   pointsArr = pointsArr.map((point) => new THREE.Vector3(...point));
   // 利用CatmullRomCurve3 创建路径，不过是平滑的三维样条曲线
   return new THREE.CatmullRomCurve3(pointsArr);
+}
+
+function onDocumentMouseDown(event) {
+  event.preventDefault();
+  let vector = new THREE.Vector3(); //三维坐标对象
+  vector.set(
+    (event.clientX / window.innerWidth) * 2 - 1,
+    -(event.clientY / window.innerHeight) * 2 + 1,
+    0.5
+  );
+  vector.unproject(camera);
+  let rayCaster = new THREE.Raycaster(
+    camera.position,
+    vector.sub(camera.position).normalize()
+  );
+  let intersects = rayCaster.intersectObjects(scene.children);
+  if (intersects.length > 0) {
+    let selected = intersects[0]; //取第一个物体
+    console.log("x坐标:" + selected.point.x);
+    console.log("y坐标:" + selected.point.y);
+    console.log("z坐标:" + selected.point.z);
+  }
+}
+
+function waitSeconds(seconds = 0) {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+}
+
+let count = 0;
+async function iterativeScene() {
+  for (;;) {
+    count++;
+    initPipeConf();
+    await waitSeconds(2);
+    resMgr.dispose();
+    await waitSeconds(1);
+    // console.log(count);
+    // console.log(data.base3D.renderer.info.memory);
+  }
 }
 </script>
 
