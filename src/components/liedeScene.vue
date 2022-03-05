@@ -237,13 +237,13 @@ function createPath(pointsArr) {
 
 function animate(time) {
   time *= 0.003;
-  tubeTexture1.offset.x = -(time * 1) % 1;
-  tubeTexture2.offset.x = -(time * 1) % 1;
+  // tubeTexture1.offset.x = -(time * 1) % 1;
+  // tubeTexture2.offset.x = -(time * 1) % 1;
   cylinderTexture.offset.x = -(time * 1) % 1;
   //  水面
-  water.position.x = gui.waterx;
+  /*  water.position.x = gui.waterx;
   water.position.y = gui.watery;
-  water.position.z = gui.waterz;
+  water.position.z = gui.waterz;*/
   // waterGeometry.parameters.width = gui.waterWidth;
   // waterGeometry.parameters.height = gui.waterHeight;
   // 标注
@@ -265,7 +265,7 @@ function animate(time) {
 
   // console.log(waterGeometry);
   requestAnimationFrame(animate);
-  water.material.uniforms["time"].value += 1.0 / 60.0;
+  // water.material.uniforms["time"].value += 1.0 / 60.0;
 
   // render();
 }
@@ -437,9 +437,9 @@ function updateUV() {
 function initGui() {
   let datGui = new dat.GUI();
   gui = {
-    waterx: -182,
+    /*   waterx: -182,
     watery: -5,
-    waterz: 232,
+    waterz: 232,*/
     // waterWidth: 0,
     // waterHeight: 0,
     //
@@ -458,9 +458,9 @@ function initGui() {
   };
 
   // (对象，属性，最小值，最大值）
-  datGui.add(gui, "waterx", -500, 250);
+  /*  datGui.add(gui, "waterx", -500, 250);
   datGui.add(gui, "watery", -10, 10);
-  datGui.add(gui, "waterz", -200, 300);
+  datGui.add(gui, "waterz", -200, 300);*/
 
   datGui.add(gui, "popUpx", -500, 250);
   datGui.add(gui, "popUpy", -10, 10);
