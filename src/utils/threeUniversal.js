@@ -33,7 +33,7 @@ let threeUniversal = {
    */
   addFloor: function (scene) {
     let mesh = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(1000, 700),
+      new THREE.PlaneBufferGeometry(1000, 800),
       new THREE.MeshPhongMaterial({ color: 0xffffff, depthWrite: false })
     );
     mesh.rotation.x = -Math.PI / 2; // 置于水平方向
@@ -41,7 +41,7 @@ let threeUniversal = {
     scene.add(mesh);
 
     //添加地板割线
-    let grid = new THREE.GridHelper(1000, 70, 0x000000, 0x000000);
+    let grid = new THREE.GridHelper(1000, 80, 0x000000, 0x000000);
     grid.material.opacity = 0.2;
     grid.material.transparent = true;
     scene.add(grid);
@@ -52,26 +52,6 @@ let threeUniversal = {
    * @param data3D
    */
   getDocumentMouseDownCoord: function (event, data3D) {
-    /*   event.preventDefault();
-    let vector = new THREE.Vector3(); //三维坐标对象
-    vector.set(
-      (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1,
-      0.5
-    );
-    vector.unproject(data3D.camera);
-    let rayCaster = new THREE.Raycaster(
-      data3D.camera.position,
-      vector.sub(data3D.camera.position).normalize()
-    );
-    let intersects = rayCaster.intersectObjects(data3D.scene.children, true);
-    if (intersects.length < 0) return;
-    let selected = intersects[0]; //取第一个物体
-    let { x, y, z } = selected.point;
-    // console.log("x: ", x, "y： ", y, "z:", z);
-    console.log([x, y, z]);
-    return { x, y, z };*/
-
     event.preventDefault();
     let raycaster = new THREE.Raycaster();
     let mouse = new THREE.Vector2();
@@ -185,6 +165,21 @@ let threeUniversal = {
     emitter.p.y = -150;
     emitter.emit();
     return emitter;
+  },
+  /**
+   * 创建天空盒
+   */
+  createSkybox: function (scene) {
+    const cubeTextureLoader = new THREE.CubeTextureLoader();
+    cubeTextureLoader.setPath("images/skybox/");
+    scene.background = cubeTextureLoader.load([
+      "posx.jpg",
+      "negx.jpg",
+      "posy.jpg",
+      "negy.jpg",
+      "posz.jpg",
+      "negz.jpg",
+    ]);
   },
 };
 

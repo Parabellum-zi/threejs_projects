@@ -40,16 +40,16 @@ class Base3D {
   initScene() {
     this.scene = new THREE.Scene();
     // this.setEvnMap("solitude_night");
-    this.setEvnMap("drackenstein");
+    this.setEvnMap("city");
   }
   initCamera() {
     this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      10000
     );
-    this.camera.position.set(0, 500, 0);
+    this.camera.position.set(0, 200, 400);
   }
   initRenderer() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true }); //antialias 抗锯齿
@@ -75,12 +75,15 @@ class Base3D {
     this.orbitControls.dampingFactor = 0.25; // 动态阻尼系数
     this.orbitControls.enableZoom = true; // 缩放
     this.orbitControls.enablePan = true; // 右键拖拽
+    this.orbitControls.minDistance = 1;
+    // this.orbitControls.maxDistance = 600;
+
     // orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
     // orbitControls.minAzimuthAngle = -Math.PI / 6;
     // orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
     // orbitControls.minPolarAngle = -Math.PI / 6;
 
-    const axesHelper = new THREE.AxesHelper(50);
+    const axesHelper = new THREE.AxesHelper(200);
     this.scene.add(axesHelper);
   }
   initLight() {
@@ -157,12 +160,11 @@ class Base3D {
         "static/model/" + model,
         (gltf) => {
           // this.model = gltf.scene.children[0];
-          console.log(gltf);
           gltf.scene.scale.x = 50;
           gltf.scene.scale.y = 50;
           gltf.scene.scale.z = 50;
-          this.model = track(gltf.scene);
-          this.scene.add(this.model);
+          this.scene.add(track(gltf.scene));
+          // this.dealMeshMaterial(gltf.scene.children);
           resolve("model loaded");
         },
         undefined,
@@ -171,6 +173,19 @@ class Base3D {
     }).then((res) => {
       console.log(res);
     });
+  }
+  /**
+   * 留住每个模型的 原材质
+   */
+  dealMeshMaterial(arrs) {
+    let result = [];
+    for (let i = 0; i < arrs.length; i++) {
+      result.push({
+        name: arrs[i].name,
+        material: arrs[i].material,
+      });
+    }
+    return result;
   }
   dispose(seconds = 0) {
     return new Promise((resolve) =>
@@ -182,6 +197,7 @@ class Base3D {
         let gl = this.renderer.domElement.getContext("webgl");
         gl && gl.getExtension("WEBGL_lose_context").loseContext();
         console.log(this.renderer.info);
+        resolve("dispose");
       }, seconds * 1000)
     );
   }
