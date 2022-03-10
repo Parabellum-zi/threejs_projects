@@ -191,12 +191,13 @@ function loadModel() {
     // "static/model/CVT.gltf",
     // "static/model/plant.gltf",
     // "static/model/stormtrooper.dae",
-    "static/model/animation.gltf",
+    // "static/model/animation.gltf",
+    "static/model/dz.gltf",
     (gltf) => {
       console.log(gltf);
-      gltf.scene.scale.x = 100;
-      gltf.scene.scale.y = 100;
-      gltf.scene.scale.z = 100;
+      // gltf.scene.scale.x = 100;
+      // gltf.scene.scale.y = 100;
+      // gltf.scene.scale.z = 100;
       scene.add(gltf.scene); //gltf.scene 添加了所有场景
 
       //添加骨骼辅助

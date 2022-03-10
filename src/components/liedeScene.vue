@@ -56,77 +56,88 @@ let labels3d = [
   { x: -106, y: 4, z: 211, name: "一期沉沙池" },
   { x: -106, y: 4, z: 148, name: "二期沉沙池" },
   { x: -106, y: 4, z: 178, name: "三期沉沙池" },
-  { x: -292, y: 4, z: 94, name: "一期反应池" },
-  { x: -367, y: 4, z: 94, name: "一期沉淀池" },
+  { x: -292, y: 4, z: 58, name: "一期反应池" },
+  { x: -367, y: 4, z: 58, name: "一期沉淀池" },
+  { x: -167, y: 4, z: 58, name: "一期沉淀池" },
   { x: -197, y: 4, z: 237, name: "一二期消毒池" },
   { x: -430, y: 4, z: -140, name: "三期生化池" },
   { x: -246, y: 4, z: -140, name: "二期反应池" },
+  { x: -478, y: 4, z: 60, name: "三期二沉池" },
+  { x: -474, y: 4, z: 205, name: "三期消毒池" },
+  { x: -48, y: 4, z: 245, name: "一二三期提升泵房" },
+  { x: 25, y: 4, z: 174, name: "污泥大转盘" },
+  { x: -48, y: 4, z: 100, name: "四期提升泵房" },
+  { x: 49, y: 4, z: 100, name: "四期沉沙池" },
+  { x: 106, y: 4, z: 0, name: "四期生化池" },
+  { x: 106, y: 4, z: -100, name: "四期二沉池" },
+  { x: 234, y: 4, z: -150, name: "高效沉淀池" },
+  { x: 60, y: 4, z: -167, name: "转盘滤池" },
+  { x: -30, y: 4, z: -170, name: "紫外消毒池" },
 ];
 let tubesArr_ws = [
-  /*{
-    x: -262.5, // h2
+  {
+    x: -262.3, // h2
     y: -7,
     z: 18,
     height: 20,
     rotation_z: Math.PI * 0.5,
-  },*/
-  /* {
+  },
+  {
     x: -263.5, // h4
     y: -7,
     z: 90,
     height: 20,
     rotation_z: Math.PI * 0.5,
-  },*/
+  },
   {
     x: -253, // s2
     y: -7,
-    z: 78,
-    height: 120,
+    z: 79.5,
+    height: 122,
     rotation_z: Math.PI,
   },
   {
-    x: -195, // h6
+    x: -197.5, // h6
     y: -7,
     z: 140,
-    height: 105,
+    height: 110,
     rotation_z: Math.PI * 0.5,
   },
-  /*
-{
-  x: -144, // s3
-  y: -7,
-  z: 174,
-  height: 63,
-  rotation_z: Math.PI,
-},
-{
-  x: -62, // s4
-  y: -7,
-  z: 257,
-  height: 17,
-  rotation_z: Math.PI,
-},
-{
-  x: -62, // s5
-  y: -7,
-  z: 220,
-  height: 8,
-  rotation_z: Math.PI,
-},
-{
-  x: -134, // h7_l
-  y: -7,
-  z: 208,
-  height: 13,
-  rotation_z: Math.PI * 0.5,
-},
-{
-  x: -72, // h7_r
-  y: -7,
-  z: 213,
-  height: 20,
-  rotation_z: Math.PI * 0.5,
-},*/
+  {
+    x: -143.3, // s3
+    y: -7,
+    z: 174.5,
+    height: 68,
+    rotation_z: Math.PI,
+  },
+  {
+    x: -54, // s4
+    y: -7,
+    z: 255,
+    height: 19,
+    rotation_z: Math.PI,
+  },
+  {
+    x: -61.2, // s5
+    y: -9,
+    z: 219,
+    height: 11,
+    rotation_z: Math.PI,
+  },
+  {
+    x: -136.2, // h7_l
+    y: -7,
+    z: 207.8,
+    height: 13,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: -73, // h7_r
+    y: -9,
+    z: 213,
+    height: 25,
+    rotation_z: Math.PI * 0.5,
+  },
 ];
 let tubesArr_cs = [
   {
@@ -231,22 +242,11 @@ function initScene() {
   threeUniversal.addFloor(data.base3D.scene);
   document.addEventListener("mousedown", onDocumentMouseDown);
   loadLiedeModel(); // 污水厂模型
-  // loadLabels(); // 标注
+  loadLabels(); // 标注
   loadTubes();
-  // loadWaterSurface();
+  loadWaterSurface();
 
   // allPipeline();
-  // drawCylinder({
-  //   item: {
-  //     x: -170,
-  //     y: -7,
-  //     z: 260,
-  //     height: 13,
-  //     // rotation_y: Math.PI,
-  //     rotation_z: Math.PI * 0.5,
-  //   },
-  //   type: "ws",
-  // });
 }
 function onDocumentMouseDown(event) {
   let intersects = threeUniversal.getDocumentMouseDownCoord(event, data.base3D);
@@ -273,10 +273,10 @@ function loadTubes() {
     (item, i) =>
       (allTubes["ws" + i] = drawCylinder({ item, type: "ws", id: "ws" + i }))
   );
-  /*  tubesArr_cs.map(
+  tubesArr_cs.map(
     (item, i) =>
       (allTubes["ys" + i] = drawCylinder({ item, type: "cs", id: "cs" + i }))
-  );*/
+  );
 }
 
 /**
@@ -577,7 +577,7 @@ function initGui() {
 
   let meshPosition = datGui.addFolder("位置"); // 位置
   meshPosition
-    .add(params, "positionX", -400, 400, 0.05)
+    .add(params, "positionX", -600, 400, 0.05)
     .name("沿x轴移动")
     .onChange(updateMesh);
   meshPosition
@@ -610,8 +610,8 @@ function initGui() {
 }
 function updateMesh() {
   // let meshChange = stripMesh; // 将meshChange赋值为需要变换的Mesh对象
-  let meshChange = CylinderMesh; // 管线
-  // let meshChange = taggingText; // 标注
+  // let meshChange = CylinderMesh; // 管线
+  let meshChange = taggingText; // 标注
   //缩放矩阵
   let scaleM = new THREE.Matrix4();
   scaleM.makeScale(params.scaleX, params.scaleY, params.scaleZ);
@@ -674,7 +674,7 @@ function drawCylinder({ item, type }) {
   const radiusBottom = radius;
   const radiusSegments = 30; // 管壁平滑度， 越大越平滑
   const heightSegments = 200;
-  const openEnded = true;
+  const openEnded = false;
   const geometry = new THREE.CylinderBufferGeometry(
     radiusTop,
     radiusBottom,

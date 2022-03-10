@@ -33,7 +33,7 @@ let threeUniversal = {
    */
   addFloor: function (scene) {
     let mesh = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(1000, 800),
+      new THREE.PlaneBufferGeometry(1100, 700),
       new THREE.MeshPhongMaterial({ color: 0xffffff, depthWrite: false })
     );
     mesh.rotation.x = -Math.PI / 2; // 置于水平方向
@@ -41,7 +41,7 @@ let threeUniversal = {
     scene.add(mesh);
 
     //添加地板割线
-    let grid = new THREE.GridHelper(1000, 80, 0x000000, 0x000000);
+    let grid = new THREE.GridHelper(1100, 70, 0x000000, 0x000000);
     grid.material.opacity = 0.2;
     grid.material.transparent = true;
     scene.add(grid);
