@@ -30,6 +30,7 @@ const sceneContainer = ref(null);
 // let gui = new dat.GUI();
 // let clock = new THREE.Clock();
 let texture;
+let textureOuter;
 let CylinderMesh;
 let stripMesh;
 
@@ -46,8 +47,8 @@ function initCamera() {
     0.1,
     10000
   ); // 视野角度 , 宽高比， 近截面（near）和远截面（far）
-  // camera.position.set(100, 60, 90); // 设置相机位置
-  camera.position.z = 7;
+  camera.position.set(100, 60, 90); // 设置相机位置
+  // camera.position.z = 7;
   scene.add(camera);
 }
 
@@ -122,7 +123,7 @@ const animate = function (time) {
   // camera.position.y = 1;
   // camera.position.z = Math.sin(cameraSpeed) * cameraRadius;
   // camera.lookAt(CylinderMesh.position);
-
+  textureOuter.offset.x = -(time * 0.2) % 1;
   resize();
   // const elapsedTime = clock.getElapsedTime();
   requestAnimationFrame(animate);
@@ -150,18 +151,18 @@ function drawCylinder() {
 
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.x = 1; // x方向的箭头密度
+  texture.repeat.x = 4; // x方向的箭头密度
   texture.repeat.y = 1; // y方向的箭头密度
   // texture.repeat.z = -40;
   texture.rotation = Math.PI * 0.5;
 
   // 创建管道
-  const radiusTop = 1;
-  const radiusBottom = 1;
-  const height = 10; // 修改管线长度
+  const radiusTop = 6;
+  const radiusBottom = 6;
+  const height = 100; // 修改管线长度
   const radiusSegments = 30; // 管壁平滑度， 越大越平滑
   const heightSegments = 200;
-  const openEnded = true;
+  const openEnded = false;
   const geometry = new THREE.CylinderBufferGeometry(
     radiusTop,
     radiusBottom,
@@ -170,22 +171,32 @@ function drawCylinder() {
     heightSegments,
     openEnded
   );
+
+  textureOuter = new THREE.TextureLoader().load("images/XX1.png");
+  textureOuter.wrapS = THREE.RepeatWrapping;
+  textureOuter.wrapT = THREE.RepeatWrapping;
+  textureOuter.repeat.x = 1;
+  textureOuter.repeat.y = 1;
+  // texture.repeat.z = -40;
+  textureOuter.rotation = Math.PI * 0.5;
+  console.log(textureOuter);
   const material = new THREE.MeshBasicMaterial({
-    // map: texture,
-    // side: THREE.DoubleSide,
-    // depthWrite: false,
-    // depthTest: false,
-    // transparent: true,
-    // opacity: 0.4,
-    color: 0x4488ff,
+    map: textureOuter,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    depthTest: false,
     transparent: true,
-    opacity: 0.35,
-    depthWrite: false, // 为true内部流动的液体会被遮挡无法显示
+
+    // opacity: 0.4,
+    // color: 0x4488ff,
+    // transparent: true,
+    // opacity: 0.35,
+    // depthWrite: false, // 为true内部流动的液体会被遮挡无法显示
   });
   CylinderMesh = new THREE.Mesh(geometry, material);
   scene.add(CylinderMesh);
-  // CylinderMesh.rotation.z = Math.PI * 0.5; // 箭头方向
-  // CylinderMesh.rotation.x = Math.PI * 0.6; //修改箭头在管壁的位置
+  CylinderMesh.rotation.z = Math.PI * 0.5; // 箭头方向
+  // CylinderMesh.rotation.x = Math.PI * 0.5 //修改箭头在管壁的位置
 
   // 管中心平面
   const stripGeo = new THREE.PlaneBufferGeometry(radiusTop * 1.7, height);
@@ -198,10 +209,11 @@ function drawCylinder() {
     transparent: true,
   });
   stripMesh = new THREE.Mesh(stripGeo, stripMat);
+  stripMesh.rotation.z = Math.PI * 0.5;
+  stripMesh.rotation.x = Math.PI * 0.5;
   scene.add(stripMesh);
-  // stripMesh.rotation.z = Math.PI * 0.5;
+
   // stripMesh.rotation.y = Math.PI * 0.5;
-  // stripMesh.rotation.x = Math.PI * 0.5;
 }
 </script>
 
