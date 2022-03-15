@@ -1,5 +1,4 @@
 import * as THREE from "three";
-
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 // 导入轨道控制器
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -7,7 +6,6 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls";
 // 模型解析
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-
 import ResourceTracker from "./ResourceTracker";
 import Stats from "three/examples/jsm/libs/stats.module";
 
@@ -53,13 +51,16 @@ class Base3D {
   }
   initRenderer() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true }); //antialias 抗锯齿
+
     // 设置屏幕像素
     this.renderer.setPixelRatio(window.devicePixelRatio);
     // 渲染的尺寸大小
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     // 消除canvas的外边框
     this.renderer.domElement.style.outline = "none";
-    this.renderer.setClearColor(new THREE.Color("#21282a"), 1);
+    // 场景背景色
+    // this.renderer.setClearColor(new THREE.Color("#21282a"), 1);
+    // this.renderer.setClearColor(new THREE.Color("#acefe0"), 1);
     // 色调映射
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; // 电影级别的色调映射
     // this.renderer.toneMappingExposure = 1; // 曝光程度
@@ -75,7 +76,7 @@ class Base3D {
     this.orbitControls.dampingFactor = 0.25; // 动态阻尼系数
     this.orbitControls.enableZoom = true; // 缩放
     this.orbitControls.enablePan = true; // 右键拖拽
-    this.orbitControls.minDistance = 1;
+    this.orbitControls.minDistance = -10;
     // this.orbitControls.maxDistance = 600;
 
     // orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
@@ -88,7 +89,7 @@ class Base3D {
   }
   initLight() {
     const ambientLight = new THREE.AmbientLight(0x909090); // 自然光，每个几何体的每个面都有光
-    const pointLight = new THREE.PointLight(0xffffff, 0.6);
+    const pointLight = new THREE.PointLight(0xffffff, 1);
     pointLight.position.x = 2;
     pointLight.position.y = 3;
     pointLight.position.z = 4;
@@ -116,7 +117,6 @@ class Base3D {
     new RGBELoader().setPath("images/hdr/").load(hdr + ".hdr", (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       this.scene.background = texture;
-
       this.scene.environment = texture; // 环境纹理
     });
   }
@@ -156,23 +156,14 @@ class Base3D {
   loadModels(model) {
     return new Promise((resolve, reject) => {
       const loader = new GLTFLoader();
-      loader.load(
-        "static/model/" + model,
-        (gltf) => {
-          // this.model = gltf.scene.children[0];
-          gltf.scene.scale.x = 50;
-          gltf.scene.scale.y = 50;
-          gltf.scene.scale.z = 50;
-          this.scene.add(track(gltf.scene));
-          // this.dealMeshMaterial(gltf.scene.children);
-          resolve("model loaded");
-        },
-        undefined,
-        reject
-      );
-    }).then((res) => {
-      console.log(res);
-    });
+      loader.load("static/model/" + model, (gltf) => {
+        this.scene.add(track(gltf.scene));
+        // this.dealMeshMaterial(gltf.scene.children);
+        resolve(gltf);
+      }),
+        (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
+        (error) => console.error("An error happened");
+    }).then((res) => console.log(res));
   }
   /**
    * 留住每个模型的 原材质

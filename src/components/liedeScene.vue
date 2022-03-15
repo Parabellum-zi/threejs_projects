@@ -15,13 +15,14 @@ import Base3D from "../utils/base3D";
 import threeUniversal from "../utils/threeUniversal";
 import * as THREE from "three";
 import { Water } from "three/examples/jsm/objects/Water";
+// 模型解析
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import * as dat from "dat.gui";
 // const clock = new THREE.Clock();
 let params; // GUI config
 let data = reactive({
   base3D: {},
 });
-let labelName = "测试标注";
 const sceneContainer = ref(null);
 let pointsArr = [
   // [-80, -20, 0],
@@ -39,18 +40,15 @@ let pointsArr1 = [
   // [0, 0, 4.8],
   // [0, 119.355, 4.8],
 ];
-let tubeTexture1;
-let tubeTexture2;
 let water;
 let waterGeometry;
 let PopUpMesh; // 标注框
 let taggingText; // 标注内容
 let texture; // 管贴图
-let outerPipeMesh; // 管道
-let innerPipeMesh; // 管道
 let CylinderMesh; // 圆柱
+let textureOuter; //管壁
 let stripMesh; // 圆柱
-let cylinderTexture;
+let cylinderTexture; // 管箭头
 const one = ref(null);
 let labels3d = [
   { x: -106, y: 4, z: 211, name: "一期沉沙池" },
@@ -138,6 +136,13 @@ let tubesArr_ws = [
     height: 25,
     rotation_z: Math.PI * 0.5,
   },
+  {
+    x: -54, // s8
+    y: -7,
+    z: 290,
+    height: 19,
+    rotation_z: Math.PI,
+  },
 ];
 let tubesArr_cs = [
   {
@@ -187,9 +192,9 @@ let waterSurface_A = {}; // 动态水面
 let allTubes = {};
 let waterArr = [
   {
-    width: 70,
+    width: 70, // 污泥大转盘
     height: 75,
-    color: 0x001e0f,
+    color: 0xe4943a,
     position: {
       x: 23,
       y: -5,
@@ -197,9 +202,9 @@ let waterArr = [
     },
   },
   {
-    width: 48,
+    width: 48, // 一二期消毒池  down
     height: 53,
-    color: 0x001e0f,
+    color: 0xacece5,
     position: {
       x: -180,
       y: -5,
@@ -207,20 +212,40 @@ let waterArr = [
     },
   },
   {
-    width: 16,
+    width: 16, //// 一二期消毒池  up
     height: 43,
-    color: 0x001e0f,
+    color: 0xacece5,
     position: {
       x: -164,
       y: -5,
       z: 187,
     },
   },
+  {
+    width: 70, // 一期反应池
+    height: 169.5,
+    color: 0x001e0f,
+    position: {
+      x: -307,
+      y: -2.6,
+      z: 54.5,
+    },
+  },
+  {
+    width: 70,
+    height: 169.5, // 一期沉淀池
+    color: 0xb8e2a6,
+    position: {
+      x: -379,
+      y: -2.6,
+      z: 54.5,
+    },
+  },
 ];
 onMounted(() => {
   initScene();
   animate();
-  // initGui();
+  initGui();
 });
 onBeforeUnmount(() => {
   try {
@@ -241,10 +266,7 @@ function initScene() {
   data.base3D = new Base3D(sceneContainer.value);
   threeUniversal.addFloor(data.base3D.scene);
   document.addEventListener("mousedown", onDocumentMouseDown);
-  loadLiedeModel(); // 污水厂模型
-  loadLabels(); // 标注
-  loadTubes();
-  loadWaterSurface();
+  loadLiedeModel("liede.gltf"); // 污水厂模型
 
   // allPipeline();
 }
@@ -279,6 +301,27 @@ function loadTubes() {
   );
 }
 
+function loadLiedeModel(model) {
+  return new Promise((resolve, reject) => {
+    const loader = new GLTFLoader();
+    loader.load(
+      "static/model/" + model,
+      (gltf) => {
+        gltf.scene.scale.x = 50;
+        gltf.scene.scale.y = 50;
+        gltf.scene.scale.z = 50;
+        data.base3D.scene.add(gltf.scene);
+        resolve(gltf);
+      },
+      (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
+      () => console.error("An error happened")
+    );
+  }).then(() => {
+    loadLabels(); // 标注
+    loadTubes(); // 管线
+    loadWaterSurface(); // 水面
+  });
+}
 /**
  * 展示点击内容
  */
@@ -305,11 +348,7 @@ function showObject(obj, event) {
   // }
 }
 
-async function loadLiedeModel() {
-  await data.base3D.loadModels("liede2.gltf");
-}
-
-function allPipeline() {
+/*function allPipeline() {
   tubeTexture1 = pipeConf(
     {
       points: pointsArr,
@@ -384,22 +423,20 @@ function createPath(pointsArr) {
   pointsArr = pointsArr.map((point) => new THREE.Vector3(...point));
   // 利用CatmullRomCurve3 创建路径，不过是平滑的三维样条曲线
   return new THREE.CatmullRomCurve3(pointsArr);
-}
+}*/
 
 function animate(time) {
   time *= 0.003;
   // 水流
-  Object.keys(allTubes).forEach(
-    (item) => (allTubes[item].offset.x = -(time * 1) % 1)
-  );
+  Object.keys(allTubes).forEach((item) => {
+    allTubes[item].textureOuter.offset.x = -(time * 0.2) % 1;
+    allTubes[item].cylinderTexture.offset.x = -(time * 1) % 1;
+  });
   // 水面
   Object.keys(waterSurface_A).forEach(
     (item) =>
-      (waterSurface_A[item].material.uniforms["time"].value += 1.0 / 60.0)
+      (waterSurface_A[item].material.uniforms["time"].value += 1.0 / 660.0)
   );
-  // tubeTexture1.offset.x = -(time * 1) % 1;
-  // tubeTexture2.offset.x = -(time * 1) % 1;
-  // cylinderTexture.offset.x = -(time * 1) % 1;
   requestAnimationFrame(animate);
   // render();
 }
@@ -468,9 +505,8 @@ function initLabels(labels_D) {
  * 标注（3维）
  */
 function addPopUpMesh(c_width, c_hight, x, y, z) {
-  let texture;
+  let texture, material;
   const textureLoader = new THREE.TextureLoader();
-  let material;
   let geometry = new THREE.PlaneGeometry(c_width * 0.1, c_hight * 0.1);
   texture = textureLoader.load("images/label.png"); // 图片贴图
   texture.wrapS = THREE.RepeatWrapping;
@@ -530,10 +566,6 @@ function initWater(conf) {
   water.position.y = position.y;
   water.position.z = position.z;
 
-  // todo
-  /*requestAnimationFrame(animate);
-  water.material.uniforms["time"].value += 1.0 / 60.0;*/
-
   data.base3D.scene.add(water);
   // if (!water) return (water = water0);
   // water1 = water0;
@@ -588,7 +620,7 @@ function initGui() {
     .add(params, "positionZ", -400, 400, 0.05)
     .name("沿z轴移动")
     .onChange(updateMesh);
-
+  meshPosition.open(); // 树状结构默认打开
   let meshRotation = datGui.addFolder("旋转"); //旋转
   meshRotation
     .add(params, "rotationX", 0, Math.PI * 2, 0.1)
@@ -611,7 +643,8 @@ function initGui() {
 function updateMesh() {
   // let meshChange = stripMesh; // 将meshChange赋值为需要变换的Mesh对象
   // let meshChange = CylinderMesh; // 管线
-  let meshChange = taggingText; // 标注
+  // let meshChange = taggingText; // 标注
+  let meshChange = water; // 水面
   //缩放矩阵
   let scaleM = new THREE.Matrix4();
   scaleM.makeScale(params.scaleX, params.scaleY, params.scaleZ);
@@ -651,7 +684,7 @@ function updateMesh() {
 
 function drawCylinder({ item, type }) {
   let radius = 0.7;
-  let color, image, rotation_y, rotation_z;
+  let outerImg, image, rotation_y, rotation_z;
   let { x, y, z, height } = item;
   item.rotation_z !== undefined
     ? (rotation_z = item.rotation_z)
@@ -659,15 +692,8 @@ function drawCylinder({ item, type }) {
   item.rotation_y !== undefined
     ? (rotation_y = item.rotation_y)
     : (rotation_y = 0);
-  type === "ws" ? (color = 0x4488ff) : (color = 0x448800);
-  type === "cs" ? (image = "allow_rain.png") : (image = "allow2.png");
-  cylinderTexture = new THREE.TextureLoader().load("images/" + image);
-  cylinderTexture.wrapS = THREE.RepeatWrapping;
-  cylinderTexture.wrapT = THREE.RepeatWrapping;
-  cylinderTexture.repeat.x = height / 5; // x方向的箭头密度
-  cylinderTexture.repeat.y = 1; // y方向的箭头密度
-  // texture.repeat.z = -40;
-  cylinderTexture.rotation = Math.PI * 0.5;
+  type === "ws" ? (outerImg = "outerGreen.png") : (outerImg = "outerBlue.png");
+  type === "cs" ? (image = "allow2.png") : (image = "allow_rain.png");
 
   // 创建管道
   const radiusTop = radius;
@@ -683,14 +709,22 @@ function drawCylinder({ item, type }) {
     heightSegments,
     openEnded
   );
+  textureOuter = new THREE.TextureLoader().load("images/" + outerImg);
+  textureOuter.wrapS = THREE.RepeatWrapping;
+  textureOuter.wrapT = THREE.RepeatWrapping;
+  textureOuter.repeat.x = height / 4;
+  textureOuter.repeat.y = 1;
+  // texture.repeat.z = -40;
+  textureOuter.rotation = Math.PI * 0.5;
+
   const material = new THREE.MeshBasicMaterial({
-    // map: texture,
-    // side: THREE.DoubleSide,
-    // depthWrite: false,
-    // depthTest: false,
-    // transparent: true,
+    map: textureOuter,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
     // opacity: 0.4,
-    color,
+    /*   color,
     transparent: true,
     opacity: 0.65,
     depthWrite: false, // 为true内部流动的液体会被遮挡无法显示
@@ -698,20 +732,26 @@ function drawCylinder({ item, type }) {
     // emissive: "#318414",
     // specular: "#22842c",
     shininess: 10,
-    shading: THREE.FlatShading,
+    shading: THREE.FlatShading,*/
   });
   CylinderMesh = new THREE.Mesh(geometry, material);
-
   CylinderMesh.rotation.x = Math.PI * 0.5;
-  // CylinderMesh.rotation.x = Math.PI;
-  CylinderMesh.position.set(x, y, z);
+  CylinderMesh.rotation.y = rotation_y;
   CylinderMesh.rotation.z = rotation_z;
+  CylinderMesh.position.set(x, y, z);
   data.base3D.scene.add(CylinderMesh);
 
   // CylinderMesh.rotation.z = Math.PI * 0.5; // 箭头方向
   // CylinderMesh.rotation.x = Math.PI * 0.6; //修改箭头在管壁的位置
 
   // 管中心平面
+  cylinderTexture = new THREE.TextureLoader().load("images/" + image);
+  cylinderTexture.wrapS = THREE.RepeatWrapping;
+  cylinderTexture.wrapT = THREE.RepeatWrapping;
+  cylinderTexture.repeat.x = height / 5; // x方向的箭头密度
+  cylinderTexture.repeat.y = 1; // y方向的箭头密度
+  // texture.repeat.z = -40;
+  cylinderTexture.rotation = Math.PI * 0.5;
   const stripGeo = new THREE.PlaneBufferGeometry(radiusTop * 1.7, height);
   const stripMat = new THREE.MeshBasicMaterial({
     map: cylinderTexture,
@@ -723,17 +763,15 @@ function drawCylinder({ item, type }) {
   });
   stripMesh = new THREE.Mesh(stripGeo, stripMat);
   stripMesh.position.set(x, y, z);
-  stripMesh.rotation.z = rotation_z;
-  data.base3D.scene.add(stripMesh);
-  // stripMesh.rotation.z = Math.PI * 0.5;
-  // stripMesh.rotation.y = Math.PI * 0.5;
-  // stripMesh.rotation.x = Math.PI * 0.5;
   stripMesh.rotation.x = Math.PI * 0.5;
   stripMesh.rotation.y = rotation_y;
-  // stripMesh.rotation.x = Math.PI;
+  stripMesh.rotation.z = rotation_z;
+  data.base3D.scene.add(stripMesh);
+
   requestAnimationFrame(animate);
 
-  return cylinderTexture;
+  return { cylinderTexture, textureOuter };
+  // return cylinderTexture;
 }
 </script>
 
