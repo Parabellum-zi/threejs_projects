@@ -72,6 +72,7 @@ let labels3d = [
   { x: 60, y: 4, z: -167, name: "转盘滤池" },
   { x: -30, y: 4, z: -170, name: "紫外消毒池" },
 ];
+// rotation_z: Math.PI * 0.5, 横向 r->l
 let tubesArr_ws = [
   {
     x: -262.3, // h2
@@ -145,29 +146,29 @@ let tubesArr_ws = [
   },
 ];
 let tubesArr_cs = [
-  {
-    x: -411.5, // h1
+  /* {
+    x: -411.5, //cd_1_h1
     y: -7,
     z: 5,
     height: 30,
     rotation_z: Math.PI * 0.5,
   },
   {
-    x: -427, // s1
+    x: -427, //cd_1_s1
     y: -7,
     z: 78.5,
     height: 148,
     rotation_z: 0,
   },
   {
-    x: -411.5, // h3
+    x: -411.5, //cd_1_h3
     y: -7,
     z: 93,
     height: 30,
     rotation_z: Math.PI * 0.5,
   },
   {
-    x: -295, // h5
+    x: -295, //cd_1_h5
     y: -7,
     z: 153,
     height: 265,
@@ -175,17 +176,158 @@ let tubesArr_cs = [
     rotation_y: Math.PI,
   },
   {
-    x: -162, // s6
+    x: -162, // xdc_12_s6
     y: -7,
     z: 161.3,
     height: 18,
   },
   {
-    x: -170, //s7
+    x: -185, // xdc_12_s1
+    y: -7,
+    z: 265,
+    height: 13,
+  },
+  {
+    x: -168, // xdc_12_s2
     y: -7,
     // z: 260,
     z: 265,
     height: 13,
+  },
+  {
+    x: -184.3, // xdc_12_s3
+    y: -7,
+    z: 196.3,
+    height: 30,
+  },
+  {
+    x: -477, //xdc_3_s1
+    y: -7,
+    z: 183,
+    height: 34,
+  },
+  {
+    x: -485, //shc_3_s1
+    y: -7,
+    z: -81,
+    height: 64,
+  },
+
+  {
+    x: -485, //cc2_3_s2
+    y: -7,
+    z: 58,
+    height: 13,
+  },
+  {
+    x: -366, //fyc_2_s1
+    y: -7,
+    z: -111,
+    height: 125,
+  },
+  {
+    x: -357.5, //fyc_2_h1
+    y: -7,
+    z: -97,
+    height: 16,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: -357.5, //fyc_2_h2
+    y: -7,
+    z: -173,
+    height: 16,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: -357.5, //fyc_2_h2
+    y: -7,
+    z: -173,
+    height: 16,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: -402, //fyc_2_h3
+    y: -7,
+    z: -48,
+    height: 73.6,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: -439.5, //fyc_2_s2
+    y: -7,
+    z: 66.5,
+    height: 230,
+  },
+  {
+    x: -312.5, //fyc_2_h4
+    y: -7,
+    z: 182,
+    height: 255,
+    rotation_z: Math.PI * 0.5,
+    rotation_y: Math.PI,
+  },
+  {
+    x: -477, //xdc_3_s2
+    y: -7,
+    z: 225,
+    height: 18,
+  },
+  {
+    x: -350, //xdc_3_h1
+    y: -7,
+    z: 234.5,
+    height: 255,
+    rotation_z: Math.PI * 0.5,
+    rotation_y: Math.PI,
+  },*/
+  {
+    x: -159, //xdc_3_h2
+    y: -7,
+    z: 272,
+    height: 125,
+    rotation_z: Math.PI * 0.5,
+    rotation_y: Math.PI,
+  },
+  /* {
+    x: -222, //xdc_3_s3
+    y: -7,
+    z: 253.2,
+    height: 38.8,
+  },*/
+  {
+    x: -76, //cs_4_s1
+    y: -7,
+    z: -13.5,
+    height: 330,
+  },
+  {
+    x: -59, // cs_4_h1
+    y: -7,
+    z: -179,
+    height: 35,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: -47, // cs_4_h2
+    y: -7,
+    z: 151,
+    height: 57,
+    rotation_z: Math.PI * 0.5,
+    rotation_y: Math.PI,
+  },
+  {
+    x: -19.2, //cs_4_s2
+    y: -7,
+    z: 203,
+    height: 105,
+  },
+  {
+    x: -47, // cs_4_h3
+    y: -7,
+    z: 256,
+    height: 57,
+    rotation_z: Math.PI * 0.5,
   },
 ];
 let waterSurface_A = {}; // 动态水面
@@ -197,7 +339,7 @@ let waterArr = [
     color: 0xe4943a,
     position: {
       x: 23,
-      y: -5,
+      y: -6,
       z: 205,
     },
   },
@@ -242,6 +384,7 @@ let waterArr = [
     },
   },
 ];
+let loadedGltf = [];
 onMounted(() => {
   initScene();
   animate();
@@ -291,10 +434,10 @@ function loadWaterSurface() {
 }
 
 function loadTubes() {
-  tubesArr_ws.map(
+  /* tubesArr_ws.map(
     (item, i) =>
       (allTubes["ws" + i] = drawCylinder({ item, type: "ws", id: "ws" + i }))
-  );
+  );*/
   tubesArr_cs.map(
     (item, i) =>
       (allTubes["ys" + i] = drawCylinder({ item, type: "cs", id: "cs" + i }))
@@ -311,15 +454,19 @@ function loadLiedeModel(model) {
         gltf.scene.scale.y = 50;
         gltf.scene.scale.z = 50;
         data.base3D.scene.add(gltf.scene);
+        loadedGltf.push(gltf.scene.getObjectByName("rotation001"));
+        loadedGltf.push(gltf.scene.getObjectByName("rotation002"));
+        loadedGltf.push(gltf.scene.getObjectByName("rotation003"));
+        loadedGltf.push(gltf.scene.getObjectByName("rotation004"));
         resolve(gltf);
       },
       (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
       () => console.error("An error happened")
     );
   }).then(() => {
-    loadLabels(); // 标注
+    // loadLabels(); // 标注
     loadTubes(); // 管线
-    loadWaterSurface(); // 水面
+    // loadWaterSurface(); // 水面
   });
 }
 /**
@@ -437,8 +584,41 @@ function animate(time) {
     (item) =>
       (waterSurface_A[item].material.uniforms["time"].value += 1.0 / 660.0)
   );
+  modelChange(time);
   requestAnimationFrame(animate);
   // render();
+}
+
+/**
+ * @Description: 污泥转盘动画
+ * @author parabellum
+ * @date 2022/3/16
+ */
+function modelChange(time) {
+  if (loadedGltf.length === 0) return;
+  loadedGltf.map((item) => {
+    switch (item.name) {
+      case "rotation001":
+        rotationY(item, time * 0.1);
+        break;
+      case "rotation002":
+        rotationY(item, time);
+        break;
+      case "rotation003":
+        rotationY(item, -time * 0.2);
+        break;
+      case "rotation004":
+        rotationY(item, time * 0.4);
+        break;
+    }
+  });
+}
+
+/**
+ * 部件绕y轴方向旋转
+ */
+function rotationY(parts, time) {
+  parts.rotation.y = time;
 }
 
 function render() {
@@ -580,13 +760,14 @@ function initGui() {
     scaleZ: 1,
 
     // rotationX: 1.6, // 竖向
+    // rotationZ: 0, // 竖向
     rotationX: 0, // 横向
+    rotationZ: 1.6, // 横向
     rotationY: 0,
-    rotationZ: 0,
 
-    positionX: -162,
-    positionY: -7,
-    positionZ: 153,
+    positionX: -19,
+    positionY: -6.3,
+    positionZ: 216,
 
     color: "#ffffff",
     addFunction: () => console.log("// 方法预留"),
@@ -599,7 +780,7 @@ function initGui() {
     .name("沿x轴缩放")
     .onChange(updateMesh);
   meshScale
-    .add(params, "scaleY", 0, 10, 0.01)
+    .add(params, "scaleY", 0, 20, 0.001)
     .name("沿y轴缩放")
     .onChange(updateMesh);
   meshScale
@@ -642,9 +823,9 @@ function initGui() {
 }
 function updateMesh() {
   // let meshChange = stripMesh; // 将meshChange赋值为需要变换的Mesh对象
-  // let meshChange = CylinderMesh; // 管线
+  let meshChange = CylinderMesh; // 管线
   // let meshChange = taggingText; // 标注
-  let meshChange = water; // 水面
+  // let meshChange = water; // 水面
   //缩放矩阵
   let scaleM = new THREE.Matrix4();
   scaleM.makeScale(params.scaleX, params.scaleY, params.scaleZ);

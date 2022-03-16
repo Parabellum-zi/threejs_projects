@@ -1,3 +1,8 @@
+/**
+ * @Description: init threejs scene etc and common methods
+ * @author parabellum
+ * @date 2022/3/16
+ */
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 // 导入轨道控制器

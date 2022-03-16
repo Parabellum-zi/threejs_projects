@@ -1,3 +1,8 @@
+/**
+ * @Description:
+ * @author parabellum
+ * @date 2022/2/16
+ */
 import * as THREE from "three";
 import Proton from "three.proton.js";
 let threeUniversal = {
