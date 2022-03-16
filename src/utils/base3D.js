@@ -8,10 +8,14 @@ import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonCont
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import ResourceTracker from "./ResourceTracker";
 import Stats from "three/examples/jsm/libs/stats.module";
+import { Sky } from "three/examples/jsm/objects/Sky";
 
 let stats;
 let resMgr = new ResourceTracker();
 const track = resMgr.track.bind(resMgr);
+
+const sun = new THREE.Vector3();
+const sky = new Sky();
 
 class Base3D {
   constructor(selector) {
@@ -24,7 +28,6 @@ class Base3D {
     this.model = {};
     this.init();
   }
-
   init() {
     this.initScene();
     this.initCamera();
@@ -34,11 +37,13 @@ class Base3D {
     this.animation();
     this.initStats();
     this.resize();
+    this.updateSun();
   }
   initScene() {
     this.scene = new THREE.Scene();
     // this.setEvnMap("solitude_night");
-    this.setEvnMap("city");
+    // this.setEvnMap("city");
+    this.initSkybox();
   }
   initCamera() {
     this.camera = new THREE.PerspectiveCamera(
@@ -95,6 +100,39 @@ class Base3D {
     pointLight.position.z = 4;
     this.scene.add(ambientLight);
     this.scene.add(pointLight);
+  }
+  initSkybox() {
+    /*    const cubeTextureLoader = new THREE.CubeTextureLoader();
+    cubeTextureLoader.setPath("images/skybox/");
+    this.scene.background = cubeTextureLoader.load([
+      "posx.png",
+      "negx.png",
+      "posy.png",
+      "negy.png",
+      "posz.png",
+      "negz.png",
+    ]);*/
+
+    // Sky
+    sky.scale.setScalar(10000);
+    this.scene.add(sky);
+    const skyUniforms = sky.material.uniforms;
+    skyUniforms["turbidity"].value = 10;
+    skyUniforms["rayleigh"].value = 2;
+    skyUniforms["mieCoefficient"].value = 0.005;
+    skyUniforms["mieDirectionalG"].value = 0.8;
+  }
+  updateSun() {
+    const parameters = {
+      elevation: 18, // 日光高度
+      azimuth: -50, // 角度方位
+    };
+    const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+    const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+    const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+    sun.setFromSphericalCoords(1, phi, theta);
+    sky.material.uniforms["sunPosition"].value.copy(sun);
+    this.scene.environment = pmremGenerator.fromScene(sky).texture;
   }
   /**
    * 第一人称视角控制
@@ -161,8 +199,12 @@ class Base3D {
         // this.dealMeshMaterial(gltf.scene.children);
         resolve(gltf);
       }),
-        (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
-        (error) => console.error("An error happened");
+        (xhr) => {
+          console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        },
+        (error) => {
+          console.error("An error happened");
+        };
     }).then((res) => console.log(res));
   }
   /**
