@@ -232,6 +232,7 @@ class Base3D {
         this.renderer.dispose();
         this.renderer.forceContextLoss();
         this.renderer.content = null;
+        this.renderer.renderLists.dispose();
         let gl = this.renderer.domElement.getContext("webgl");
         gl && gl.getExtension("WEBGL_lose_context").loseContext();
         console.log(this.renderer.info);
