@@ -6,6 +6,7 @@
         <p>{{ labelName }}</p>
       </div>
     </div>-->
+    <button id="del" @click.stop="deleteGroup">删除标注</button>
   </div>
 </template>
 
@@ -144,9 +145,30 @@ let tubesArr_ws = [
     height: 19,
     rotation_z: Math.PI,
   },
+  {
+    x: -18.3, //cc2_4_s4
+    y: -7,
+    z: -65,
+    height: 30,
+    rotation_z: Math.PI,
+  },
+  {
+    x: 97, //cc2_4_s5
+    y: -7,
+    z: -65,
+    height: 30,
+    rotation_z: Math.PI,
+  },
+  {
+    x: 225, //cc2_4_s6
+    y: -7,
+    z: -65,
+    height: 30,
+    rotation_z: Math.PI,
+  },
 ];
 let tubesArr_cs = [
-  /* {
+  {
     x: -411.5, //cd_1_h1
     y: -7,
     z: 5,
@@ -280,7 +302,7 @@ let tubesArr_cs = [
     height: 255,
     rotation_z: Math.PI * 0.5,
     rotation_y: Math.PI,
-  },*/
+  },
   {
     x: -159, //xdc_3_h2
     y: -7,
@@ -289,12 +311,12 @@ let tubesArr_cs = [
     rotation_z: Math.PI * 0.5,
     rotation_y: Math.PI,
   },
-  /* {
+  {
     x: -222, //xdc_3_s3
     y: -7,
     z: 253.2,
     height: 38.8,
-  },*/
+  },
   {
     x: -76, //cs_4_s1
     y: -7,
@@ -328,6 +350,127 @@ let tubesArr_cs = [
     z: 256,
     height: 57,
     rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: -95.5, //cs_4_s4
+    y: -7,
+    z: 283,
+    height: 55,
+  },
+  {
+    x: -57.5, // cs_4_h3
+    y: -7,
+    z: 256,
+    height: 77,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 0, // zplc_h1
+    y: -7,
+    z: -179,
+    height: 40,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 57, //zplc_s1
+    y: -7,
+    z: -152,
+    height: 20,
+    rotation_z: Math.PI,
+  },
+  {
+    x: 0, //zplc_s2
+    y: -7,
+    z: -209,
+    height: 60,
+  },
+  {
+    x: -18.3, //cc2_4_s1
+    y: -7,
+    z: -132,
+    height: 20,
+    rotation_z: Math.PI,
+  },
+  {
+    x: 97, //cc2_4_s2
+    y: -7,
+    z: -132,
+    height: 20,
+    rotation_z: Math.PI,
+  },
+  {
+    x: 224.7, //cc2_4_s3
+    y: -7,
+    z: -132,
+    height: 20,
+    rotation_z: Math.PI,
+  },
+  {
+    x: 236, // gxcdc_s4
+    y: -7,
+    z: -230.7,
+    height: 20,
+    rotation_z: Math.PI,
+  },
+  {
+    x: 118, // zplc_h2
+    y: -7,
+    z: -240,
+    height: 237,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 39.5, // cc2_4_h1
+    y: -7,
+    z: -142,
+    height: 116,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 150.8, // gxcdc_h1
+    y: -7,
+    z: -211,
+    height: 90,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 151, // gxcdc_h2
+    y: -7,
+    z: -180.3,
+    height: 50,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 199.5, // cc2_4_h2
+    y: -7,
+    z: -141.3,
+    height: 49,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 115.8, // gxcdc_h3
+    y: -7,
+    z: -165.5,
+    height: 20,
+    rotation_z: Math.PI * 0.5,
+  },
+  {
+    x: 106.5, // gxcdc_s1
+    y: -7,
+    z: -188,
+    height: 45,
+  },
+  {
+    x: 126.5, // gxcdc_s2
+    y: -7,
+    z: -173,
+    height: 16,
+  },
+  {
+    x: 175.4, // gxcdc_s3
+    y: -7,
+    z: -161,
+    height: 39,
   },
 ];
 let waterSurface_A = {}; // 动态水面
@@ -385,6 +528,11 @@ let waterArr = [
   },
 ];
 let loadedGltf = [];
+
+let labelGroup = new THREE.Group();
+labelGroup.name = "labels";
+let spriteGroup = new THREE.Group();
+spriteGroup.name = "labels_2d";
 onMounted(() => {
   initScene();
   animate();
@@ -422,11 +570,13 @@ function onDocumentMouseDown(event) {
     // console.log(selectObject.geometry.boundingBox.max);
     // console.log(selectObject.geometry.boundingBox.min);
     // showObject(selectObject, event);
+    console.log(selectObject);
   }
 }
 
 function loadLabels() {
-  labels3d.map((item) => initLabels(item));
+  // labels3d.map((item) => initLabels(item)); //  3d label
+  labels3d.map((item) => spriteImg(item)); // 2d label
 }
 
 function loadWaterSurface() {
@@ -434,14 +584,14 @@ function loadWaterSurface() {
 }
 
 function loadTubes() {
-  /* tubesArr_ws.map(
+  tubesArr_ws.map(
     (item, i) =>
       (allTubes["ws" + i] = drawCylinder({ item, type: "ws", id: "ws" + i }))
-  );*/
-  tubesArr_cs.map(
+  );
+  /*  tubesArr_cs.map(
     (item, i) =>
       (allTubes["ys" + i] = drawCylinder({ item, type: "cs", id: "cs" + i }))
-  );
+  );*/
 }
 
 function loadLiedeModel(model) {
@@ -459,14 +609,14 @@ function loadLiedeModel(model) {
         loadedGltf.push(gltf.scene.getObjectByName("rotation003"));
         loadedGltf.push(gltf.scene.getObjectByName("rotation004"));
         resolve(gltf);
-      },
-      (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
-      () => console.error("An error happened")
+      }
+      // (xhr) => console.log((xhr.loaded / xhr.total) * 100 + "% loaded"),
+      // () => console.error("An error happened")
     );
   }).then(() => {
-    // loadLabels(); // 标注
+    loadLabels(); // 标注
     loadTubes(); // 管线
-    // loadWaterSurface(); // 水面
+    loadWaterSurface(); // 水面
   });
 }
 /**
@@ -621,15 +771,6 @@ function rotationY(parts, time) {
   parts.rotation.y = time;
 }
 
-function render() {
-  //获取到窗口的一半高度和一半宽度
-  let halfWidth = window.innerWidth / 2;
-  let halfHeight = window.innerHeight / 2;
-  let vector1 = CylinderMesh.position.clone().project(data.base3D.camera);
-  one.value.style.left = vector1.x * halfWidth + halfWidth + "px";
-  one.value.style.top = -vector1.y * halfHeight + halfHeight + "px";
-}
-
 // 标注文字部分
 function initLabels(labels_D) {
   let { x, y, z, name } = labels_D;
@@ -678,7 +819,8 @@ function initLabels(labels_D) {
 
   taggingText = new THREE.Mesh(geometry1, material1);
   taggingText.position.set(x, y, z);
-  data.base3D.scene.add(taggingText);
+  labelGroup.add(taggingText);
+  // data.base3D.scene.add(taggingText);
   addPopUpMesh(c_width, c_hight, x, y, z);
 }
 /**
@@ -699,7 +841,95 @@ function addPopUpMesh(c_width, c_hight, x, y, z) {
   });
   PopUpMesh = new THREE.Mesh(geometry, material);
   PopUpMesh.position.set(x, y, z);
-  data.base3D.scene.add(PopUpMesh);
+  labelGroup.add(PopUpMesh);
+  data.base3D.scene.add(labelGroup);
+
+  /*let allChildren = data.base3D.scene.children;
+  for (let i = allChildren.length - 1; i >= 0; i--) {
+    if (allChildren[i] instanceof THREE.Group) {
+      console.log(allChildren[i]);
+
+      setTimeout(() => {
+        console.log("delete group");
+        data.base3D.scene.remove(allChildren[i]);
+      }, 1000 * 5);
+      // scene.remove(allChildren[i]);
+    }
+  }*/
+}
+
+/**
+ * 标注 （2维）
+ */
+function spriteImg(labels_D) {
+  let { x, y, z } = labels_D;
+  let texture = new THREE.ImageUtils.loadTexture("images/label.png");
+  texture.minFilter = THREE.NearestFilter; // 解决图片的失真问题，最近渲染
+
+  texture.needsUpdate = true;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  let material = new THREE.SpriteMaterial({
+    map: texture,
+    useScreenCoordinates: false,
+    // alignment: THREE.SpriteAlignment.center,
+    transparent: true, //透明度
+    // side: THREE.DoubleSide, // 双面渲染
+  });
+  let sprite = new THREE.Sprite(material);
+  sprite.scale.set(10, 10, 10);
+  sprite.position.set(x, y, z);
+  spriteGroup.add(sprite);
+  spriteText(labels_D);
+}
+function spriteText(labels_D) {
+  let { x, y, z, name } = labels_D;
+  let c_width = 200,
+    c_hight = 140;
+  let canvas = document.createElement("canvas");
+  let ctx = canvas.getContext("2d");
+  canvas.width = c_width;
+  canvas.height = c_hight;
+  //制作矩形
+  ctx.fillStyle = "rgba(98,75,14,1)";
+  ctx.fillRect(0, 0, c_width, c_hight * 0.22);
+  ctx.fillStyle = "#FFDD77";
+  ctx.font = 24 + 'px "sans-serif';
+  ctx.textAlign = "center"; // 设置水平对齐方式
+  ctx.textBaseline = "middle"; // 设置垂直对齐方式
+  ctx.fillText(name, c_width / 2, (c_hight * 0.23) / 2); // canvas  水平垂直居中
+  let texture = new THREE.Texture(canvas);
+  texture.needsUpdate = true;
+  let material = new THREE.SpriteMaterial({
+    map: texture,
+    useScreenCoordinates: false,
+    // alignment: THREE.SpriteAlignment.center,
+    transparent: true,
+  });
+  let sprite = new THREE.Sprite(material);
+  sprite.scale.set(10, 10, 10);
+  sprite.position.set(x, y, z);
+  spriteGroup.add(sprite);
+  data.base3D.scene.add(spriteGroup);
+}
+
+/**
+ * 根据组名称获取组
+ */
+function getGroups() {
+  data.base3D.scene.traverse((obj) => {
+    if (obj.type === "Group" && obj.name === "labels") {
+      console.log(obj);
+    }
+  });
+}
+
+function deleteGroup() {
+  data.base3D.scene.traverse((obj) => {
+    if (obj.type === "Group" && obj.name === "labels_2d")
+      data.base3D.scene.remove(obj);
+  });
+  // console.log(data.base3D.scene);
 }
 
 // function PlaneGeometry(mesh) {
@@ -740,15 +970,11 @@ function initWater(conf) {
     distortionScale: 3.7,
     // fog: data.base3d.scene.fog !== undefined,
   });
-
   water.rotation.x = -Math.PI / 2;
   water.position.x = position.x;
   water.position.y = position.y;
   water.position.z = position.z;
-
   data.base3D.scene.add(water);
-  // if (!water) return (water = water0);
-  // water1 = water0;
   return water;
 }
 
@@ -759,15 +985,15 @@ function initGui() {
     scaleY: 1,
     scaleZ: 1,
 
-    // rotationX: 1.6, // 竖向
-    // rotationZ: 0, // 竖向
-    rotationX: 0, // 横向
-    rotationZ: 1.6, // 横向
+    rotationX: 1.6, // 竖向
+    rotationZ: 0, // 竖向
+    // rotationX: 0, // 横向
+    // rotationZ: 1.56, // 横向
     rotationY: 0,
 
-    positionX: -19,
+    positionX: 175,
     positionY: -6.3,
-    positionZ: 216,
+    positionZ: -160,
 
     color: "#ffffff",
     addFunction: () => console.log("// 方法预留"),
@@ -804,15 +1030,15 @@ function initGui() {
   meshPosition.open(); // 树状结构默认打开
   let meshRotation = datGui.addFolder("旋转"); //旋转
   meshRotation
-    .add(params, "rotationX", 0, Math.PI * 2, 0.1)
+    .add(params, "rotationX", 0, Math.PI * 2, 0.001)
     .name("沿x轴旋转")
     .onChange(updateMesh);
   meshRotation
-    .add(params, "rotationY", 0, Math.PI * 2, 0.1)
+    .add(params, "rotationY", 0, Math.PI * 2, 0.001)
     .name("沿y轴旋转")
     .onChange(updateMesh);
   meshRotation
-    .add(params, "rotationZ", 0, Math.PI * 2, 0.1)
+    .add(params, "rotationZ", 0, Math.PI * 2, 0.001)
     .name("沿z轴旋转")
     .onChange(updateMesh);
 
@@ -954,6 +1180,34 @@ function drawCylinder({ item, type }) {
   return { cylinderTexture, textureOuter };
   // return cylinderTexture;
 }
+let selectedObject = null;
+const pointer = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+
+function onPointerMove(event) {
+  if (selectedObject) {
+    selectedObject.material.color.set("#69f");
+    selectedObject = null;
+  }
+
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(pointer, camera);
+
+  const intersects = raycaster.intersectObject(group, true);
+
+  if (intersects.length > 0) {
+    const res = intersects.filter(function (res) {
+      return res && res.object;
+    })[0];
+
+    if (res && res.object) {
+      selectedObject = res.object;
+      selectedObject.material.color.set("#f00");
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -981,5 +1235,10 @@ function drawCylinder({ item, type }) {
 #sceneContainer {
   width: 100%;
   height: 100%;
+}
+
+#del {
+  position: absolute;
+  top: 50px;
 }
 </style>

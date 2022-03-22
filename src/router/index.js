@@ -49,6 +49,10 @@ const routes = [
     path: "/water",
     component: () => import("../components/water.vue"),
   },
+  {
+    path: "/simpleScene",
+    component: () => import("../components/simpleScene.vue"),
+  },
 ];
 const router = createRouter({
   history: createWebHistory(),

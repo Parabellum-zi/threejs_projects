@@ -107,18 +107,6 @@ class Base3D {
     this.scene.add(pointLight);
   }
   initSkybox() {
-    /*    const cubeTextureLoader = new THREE.CubeTextureLoader();
-    cubeTextureLoader.setPath("images/skybox/");
-    this.scene.background = cubeTextureLoader.load([
-      "posx.png",
-      "negx.png",
-      "posy.png",
-      "negy.png",
-      "posz.png",
-      "negz.png",
-    ]);*/
-
-    // Sky
     sky.scale.setScalar(10000);
     this.scene.add(sky);
     const skyUniforms = sky.material.uniforms;
