@@ -60,7 +60,7 @@ class Base3D {
     this.camera.position.set(0, 200, 400);
   }
   initRenderer() {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true }); //antialias 抗锯齿
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); //antialias 抗锯齿
 
     // 设置屏幕像素
     this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -68,6 +68,7 @@ class Base3D {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     // 消除canvas的外边框
     this.renderer.domElement.style.outline = "none";
+    this.renderer.setClearAlpha(0.3);
     // 场景背景色
     // this.renderer.setClearColor(new THREE.Color("#21282a"), 1);
     // this.renderer.setClearColor(new THREE.Color("#acefe0"), 1);
@@ -89,10 +90,10 @@ class Base3D {
     this.orbitControls.minDistance = -10;
     // this.orbitControls.maxDistance = 600;
 
-    // orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
-    // orbitControls.minAzimuthAngle = -Math.PI / 6;
-    // orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
-    // orbitControls.minPolarAngle = -Math.PI / 6;
+    // this.orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
+    // this.orbitControls.minAzimuthAngle = -Math.PI / 6;
+    // this.orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
+    // this.orbitControls.minPolarAngle = -Math.PI / 6;
 
     const axesHelper = new THREE.AxesHelper(200);
     this.scene.add(axesHelper);
@@ -115,6 +116,7 @@ class Base3D {
     skyUniforms["mieCoefficient"].value = 0.005;
     skyUniforms["mieDirectionalG"].value = 0.8;
   }
+
   updateSun() {
     const parameters = {
       elevation: 18, // 日光高度
@@ -189,16 +191,15 @@ class Base3D {
       const loader = new GLTFLoader();
       loader.load("static/model/" + model, (gltf) => {
         this.scene.add(track(gltf.scene));
-        // this.dealMeshMaterial(gltf.scene.children);
         resolve(gltf);
       }),
         (xhr) => {
           console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
         },
         (error) => {
-          console.error("An error happened");
+          console.error("An error happened", error);
         };
-    }).then((res) => console.log(res));
+    });
   }
   /**
    * 留住每个模型的 原材质

@@ -38,8 +38,8 @@ const routes = [
     component: () => import("../components/loadModel.vue"),
   },
   {
-    path: "/waterLoop",
-    component: () => import("../components/waterPool.vue"),
+    path: "/rightAngleTube",
+    component: () => import("../components/rightAngleTube.vue"),
   },
   {
     path: "/liedeScene",
@@ -52,6 +52,10 @@ const routes = [
   {
     path: "/simpleScene",
     component: () => import("../components/simpleScene.vue"),
+  },
+  {
+    path: "/textGeometry",
+    component: () => import("../components/textGeometry.vue"),
   },
 ];
 const router = createRouter({

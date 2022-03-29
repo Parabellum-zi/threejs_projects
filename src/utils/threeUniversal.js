@@ -5,6 +5,10 @@
  */
 import * as THREE from "three";
 import Proton from "three.proton.js";
+import { Sky } from "three/examples/jsm/objects/Sky";
+const sky = new Sky();
+const sun = new THREE.Vector3();
+
 let threeUniversal = {
   stats: {}, // FPS (plugin)
   texture: {},
@@ -38,7 +42,7 @@ let threeUniversal = {
    */
   addFloor: function (scene) {
     let mesh = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(1100, 700),
+      new THREE.PlaneBufferGeometry(1100, 1100),
       new THREE.MeshPhongMaterial({ color: 0xffffff, depthWrite: false })
     );
     mesh.rotation.x = -Math.PI / 2; // 置于水平方向
@@ -46,7 +50,7 @@ let threeUniversal = {
     scene.add(mesh);
 
     //添加地板割线
-    let grid = new THREE.GridHelper(1100, 70, 0x000000, 0x000000);
+    let grid = new THREE.GridHelper(1100, 110, 0x000000, 0x000000);
     grid.material.opacity = 0.2;
     grid.material.transparent = true;
     scene.add(grid);
@@ -63,7 +67,7 @@ let threeUniversal = {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, data3D.camera);
-    return raycaster.intersectObjects(data3D.scene.children, true);
+    return raycaster.intersectObjects(data3D.scene, true);
   },
   /**
    *  creat pipeline
@@ -71,7 +75,6 @@ let threeUniversal = {
    */
   creatPipe: function (conf) {
     const path = this.createPath(conf.points);
-    // console.log("..........", path);
     const geometry = new THREE.TubeGeometry(path, 100, conf.radius, 8, false);
     const textureLoader = new THREE.TextureLoader();
     let material;
@@ -185,6 +188,28 @@ let threeUniversal = {
       "posz.jpg",
       "negz.jpg",
     ]);
+  },
+  createSky: function () {
+    // Sky
+    sky.scale.setScalar(10000);
+    this.scene.add(sky);
+    const skyUniforms = sky.material.uniforms;
+    skyUniforms["turbidity"].value = 10;
+    skyUniforms["rayleigh"].value = 2;
+    skyUniforms["mieCoefficient"].value = 0.005;
+    skyUniforms["mieDirectionalG"].value = 0.8;
+  },
+  updateSun() {
+    const parameters = {
+      elevation: 18, // 日光高度
+      azimuth: -50, // 角度方位
+    };
+    const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+    const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+    const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+    sun.setFromSphericalCoords(1, phi, theta);
+    sky.material.uniforms["sunPosition"].value.copy(sun);
+    this.scene.environment = pmremGenerator.fromScene(sky).texture;
   },
 };
 
