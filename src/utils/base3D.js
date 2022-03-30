@@ -48,6 +48,8 @@ class Base3D {
     this.scene = new THREE.Scene();
     // this.setEvnMap("solitude_night");
     // this.setEvnMap("city");
+    this.scene.fog = new THREE.Fog(0xffffff, 20, 10000); //远处添加边境线效果
+
     this.initSkybox();
   }
   initCamera() {
@@ -104,11 +106,14 @@ class Base3D {
     pointLight.position.x = 2;
     pointLight.position.y = 3;
     pointLight.position.z = 4;
+    // this.scene.add(new THREE.PointLightHelper(pointLight, 1))  /添加灯光辅助容器（便于查看灯光位置）
+
     this.scene.add(ambientLight);
     this.scene.add(pointLight);
   }
   initSkybox() {
     sky.scale.setScalar(10000);
+    sky.name = "sky";
     this.scene.add(sky);
     const skyUniforms = sky.material.uniforms;
     skyUniforms["turbidity"].value = 10;
