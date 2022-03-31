@@ -1,24 +1,34 @@
 <template>
   <div id="sceneContainer" ref="sceneContainer">
-    <!--   <div class="title" ref="one">
-      <div class="label" style="width: 140px; height: 157px">
-        <img src="/public/images/label.png" alt="" />
-        <p>{{ labelName }}</p>
-      </div>
-    </div>-->
-    <button id="del" @click.stop="deleteGroup">删除标注</button>
+    <!--    <button id="del" @click.stop="deleteGroup">删除标注</button>-->
+    <button
+      class="pass_button"
+      @click.stop="() => (state.renderPass = !state.renderPass)"
+    >
+      标签<span class="highlight">{{ state.renderPass ? "开" : "关" }}</span>
+    </button>
+    <div class="phaseOf">
+      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('1')">一期</button>
+      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('2')">二期</button>
+      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('3')">三期</button>
+      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('4')">四期</button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
+import { ref, reactive, onMounted, onBeforeUnmount, watch } from "vue";
 import Base3D from "../utils/base3D";
 import threeUniversal from "../utils/threeUniversal";
 import * as THREE from "three";
 import { Water } from "three/examples/jsm/objects/Water";
+
 // 模型解析
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import * as dat from "dat.gui";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
+import TWEEN from "tween/tween.js";
 // const clock = new THREE.Clock();
 let params; // GUI config
 let data = reactive({
@@ -50,7 +60,6 @@ let CylinderMesh; // 圆柱
 let textureOuter; //管壁
 let stripMesh; // 圆柱
 let cylinderTexture; // 管箭头
-const one = ref(null);
 let labels3d = [
   { x: -106, y: 4, z: 211, name: "一期沉沙池" },
   { x: -106, y: 4, z: 148, name: "二期沉沙池" },
@@ -72,7 +81,7 @@ let labels3d = [
   { x: 234, y: 4, z: -150, name: "高效沉淀池" },
   { x: 60, y: 4, z: -167, name: "转盘滤池" },
   { x: -30, y: 4, z: -170, name: "紫外消毒池" },
-];
+]; // 标注
 // rotation_z: Math.PI * 0.5, 横向 r->l
 let tubesArr_ws = [
   {
@@ -528,15 +537,24 @@ let waterArr = [
   },
 ];
 let loadedGltf = [];
+let selectedObject = null;
+const pointer = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
 
 let labelGroup = new THREE.Group();
 labelGroup.name = "labels";
 let spriteGroup = new THREE.Group();
 spriteGroup.name = "labels_2d";
+// 背景色， 标签开关
+let state = reactive({
+  backgroundColor: "#3cd4cf",
+  renderPass: true,
+});
+
 onMounted(() => {
   initScene();
   animate();
-  initGui();
+  // initGui();
 });
 onBeforeUnmount(() => {
   try {
@@ -552,12 +570,18 @@ onBeforeUnmount(() => {
     console.error(e);
   }
 });
+watch(
+  () => state.renderPass,
+  (n) => labelsGroupStatus(n)
+);
 
 function initScene() {
   data.base3D = new Base3D(sceneContainer.value);
   threeUniversal.addFloor(data.base3D.scene);
-  document.addEventListener("mousedown", onDocumentMouseDown);
+  // document.addEventListener("mousedown", onDocumentMouseDown);
+  document.addEventListener("mousedown", onPointerClick);
   loadLiedeModel("liede.gltf"); // 污水厂模型
+  data.base3D.scene.add(spriteGroup);
 
   // allPipeline();
 }
@@ -576,7 +600,7 @@ function onDocumentMouseDown(event) {
 
 function loadLabels() {
   // labels3d.map((item) => initLabels(item)); //  3d label
-  labels3d.map((item) => spriteImg(item)); // 2d label
+  labels3d.map((item) => spriteImg(item)); // 2d sprite  label
 }
 
 function loadWaterSurface() {
@@ -614,9 +638,10 @@ function loadLiedeModel(model) {
       // () => console.error("An error happened")
     );
   }).then(() => {
-    loadLabels(); // 标注
-    loadTubes(); // 管线
-    loadWaterSurface(); // 水面
+    // loadLabels(); // 标注
+    // loadTubes(); // 管线
+    // loadWaterSurface(); // 水面
+    labels3d.slice(0, 3).map((item) => createText(item)); // 3D fonts label
   });
 }
 /**
@@ -734,7 +759,7 @@ function animate(time) {
     (item) =>
       (waterSurface_A[item].material.uniforms["time"].value += 1.0 / 660.0)
   );
-  modelChange(time);
+  // modelChange(time);  // 转盘旋转动画
   requestAnimationFrame(animate);
   // render();
 }
@@ -771,7 +796,9 @@ function rotationY(parts, time) {
   parts.rotation.y = time;
 }
 
-// 标注文字部分
+/**
+ * 标注文字部分（3维）
+ */
 function initLabels(labels_D) {
   let { x, y, z, name } = labels_D;
   let c_width = 200,
@@ -862,23 +889,22 @@ function addPopUpMesh(c_width, c_hight, x, y, z) {
  * 标注 （2维）
  */
 function spriteImg(labels_D) {
-  let { x, y, z } = labels_D;
+  let { x, y, z, name } = labels_D;
   let texture = new THREE.ImageUtils.loadTexture("images/label.png");
   texture.minFilter = THREE.NearestFilter; // 解决图片的失真问题，最近渲染
-
   texture.needsUpdate = true;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   let material = new THREE.SpriteMaterial({
     map: texture,
-    useScreenCoordinates: false,
+    // useScreenCoordinates: false,
     // alignment: THREE.SpriteAlignment.center,
     transparent: true, //透明度
-    // side: THREE.DoubleSide, // 双面渲染
   });
   let sprite = new THREE.Sprite(material);
   sprite.scale.set(10, 10, 10);
   sprite.position.set(x, y, z);
+  sprite.name = name;
   spriteGroup.add(sprite);
   spriteText(labels_D);
 }
@@ -898,11 +924,12 @@ function spriteText(labels_D) {
   ctx.textAlign = "center"; // 设置水平对齐方式
   ctx.textBaseline = "middle"; // 设置垂直对齐方式
   ctx.fillText(name, c_width / 2, (c_hight * 0.23) / 2); // canvas  水平垂直居中
+
   let texture = new THREE.Texture(canvas);
   texture.needsUpdate = true;
   let material = new THREE.SpriteMaterial({
     map: texture,
-    useScreenCoordinates: false,
+    // useScreenCoordinates: false,
     // alignment: THREE.SpriteAlignment.center,
     transparent: true,
   });
@@ -910,26 +937,15 @@ function spriteText(labels_D) {
   sprite.scale.set(10, 10, 10);
   sprite.position.set(x, y, z);
   spriteGroup.add(sprite);
-  data.base3D.scene.add(spriteGroup);
 }
 
 /**
  * 根据组名称获取组
  */
-function getGroups() {
+function labelsGroupStatus(status) {
   data.base3D.scene.traverse((obj) => {
-    if (obj.type === "Group" && obj.name === "labels") {
-      console.log(obj);
-    }
+    if (obj.type === "Group" && obj.name === "labels_2d") obj.visible = status;
   });
-}
-
-function deleteGroup() {
-  data.base3D.scene.traverse((obj) => {
-    if (obj.type === "Group" && obj.name === "labels_2d")
-      data.base3D.scene.remove(obj);
-  });
-  // console.log(data.base3D.scene);
 }
 
 // function PlaneGeometry(mesh) {
@@ -978,6 +994,9 @@ function initWater(conf) {
   return water;
 }
 
+/**
+ * GUI相关
+ */
 function initGui() {
   let datGui = new dat.GUI();
   params = {
@@ -1180,33 +1199,80 @@ function drawCylinder({ item, type }) {
   return { cylinderTexture, textureOuter };
   // return cylinderTexture;
 }
-let selectedObject = null;
-const pointer = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
 
-function onPointerMove(event) {
+/**
+ * 点击获取精灵标签
+ * @param event
+ */
+function onPointerClick(event) {
   if (selectedObject) {
-    selectedObject.material.color.set("#69f");
+    selectedObject.material.color.set("#FD7");
     selectedObject = null;
   }
-
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  raycaster.setFromCamera(pointer, camera);
-
-  const intersects = raycaster.intersectObject(group, true);
-
-  if (intersects.length > 0) {
-    const res = intersects.filter(function (res) {
-      return res && res.object;
-    })[0];
-
-    if (res && res.object) {
-      selectedObject = res.object;
-      selectedObject.material.color.set("#f00");
-    }
+  raycaster.setFromCamera(pointer, data.base3D.camera);
+  const intersects = raycaster.intersectObject(spriteGroup, true);
+  if (intersects.length < 0) return;
+  const res = intersects.filter((res) => res && res.object)[0];
+  if (res && res.object) {
+    selectedObject = res.object;
+    selectedObject.material.color.set("#f00");
   }
+}
+
+/**
+ *使用 Tween.js 作为间补动画
+ */
+function cameraToPhaseOf(item) {
+  switch (item) {
+    case "1":
+      break;
+    case "2":
+      break;
+    case "3":
+      break;
+    case "4":
+      break;
+    default:
+      break;
+  }
+}
+
+/**
+ * 原生中文无法显示 使用https://gero3.github.io/facetype.js/ 将.tff 格式的文字转为 .json 格式
+ */
+function createText(options) {
+  let { x, y, z, name } = options;
+  const loader = new FontLoader();
+  loader.load("/fonts/STSong_Regular.json", (font) => {
+    let fontGeometry = new TextGeometry(name, {
+      size: 8, //字号大小，一般为大写字母的高度
+      height: 2, //文字的厚度
+      weight: "normal", //值为'normal'或'bold'，表示是否加粗
+      font: font, //字体，默认是'helvetiker'，需对应引用的字体文件
+      style: "normal", //值为'normal'或'italics'，表示是否斜体
+      bevelThickness: 1, //倒角厚度
+      bevelSize: 1, //倒角宽度
+      curveSegments: 30, //弧线分段数，使得文字的曲线更加光滑
+      bevelEnabled: true, //布尔值，是否使用倒角，意为在边缘处斜切
+    });
+    fontGeometry.computeBoundingBox(); //绑定盒子模型
+    // 文字的材质
+    /*    let fontMaterial = new THREE.MeshNormalMaterial({
+      flatShading: THREE.FlatShading,
+      transparent: true,
+      opacity: 0.9,
+    });*/
+    // let fontMaterial = new THREE.MeshBasicMaterial({ color: 0xa5e5e9 });
+    let fontMaterial = new THREE.MeshBasicMaterial({ color: 0x54afe8 });
+    let fonts = new THREE.Mesh(fontGeometry, fontMaterial);
+    // 计算出整个模型宽度的一半, 不然模型就会绕着x = 0,中心旋转
+    /*    fonts.position.x =
+      -(fontGeometry.boundingBox.max.x - fontGeometry.boundingBox.min.x) / 2;*/
+    fonts.position.set(x - 18, y, z);
+    data.base3D.scene.add(fonts);
+  });
 }
 </script>
 
@@ -1240,5 +1306,35 @@ function onPointerMove(event) {
 #del {
   position: absolute;
   top: 50px;
+}
+
+.pass_button {
+  position: fixed;
+  top: 60px;
+  left: 4px;
+  height: 30px;
+  width: 64px;
+  outline: none;
+  border: none;
+  -webkit-appearance: none;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+.highlight {
+  color: rgba(255, 255, 0, 0.6);
+}
+
+.phaseOf {
+  position: fixed;
+  top: 100px;
+  left: 4px;
+  width: 43px;
+  height: 130px;
+}
+.phaseOf .phaseOf_c {
+  margin: 4px 0;
 }
 </style>

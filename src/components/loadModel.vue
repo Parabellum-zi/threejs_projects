@@ -109,8 +109,8 @@ function loadModel() {
     // "static/model/animation.gltf",
     // "static/model/dz.gltf",
     // "static/model/pool.gltf",
-    "static/model/liede.gltf",
-    // "static/model/jiadu/jiadu2.gltf",
+    // "static/model/liede.gltf",
+    "static/model/jiadu/jiadu2.gltf",
     (gltf) => {
       // console.log(gltf);
       // gltf.scene.scale.x = 0.2;

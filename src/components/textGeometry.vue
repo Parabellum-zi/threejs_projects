@@ -80,6 +80,8 @@ function initScene() {
   data.base3D = new Base3D(sceneContainer.value);
   threeUniversal.addFloor(data.base3D.scene);
   labels3d.map((item) => createText(item));
+
+  initContent();
 }
 /**
  * 原生中文无法显示 使用https://gero3.github.io/facetype.js/ 将.tff 格式的文字转为 .json 格式
@@ -138,6 +140,44 @@ function createMesh(geom) {
     meshMaterial,
     wireFrameMat,
   ]);
+}
+
+function initContent() {
+  let text = "three.js";
+  let loader = new FontLoader();
+  loader.load("/fonts/STSong_Regular.json", (font) => {
+    // 材质
+    let fontMaterial = new THREE.MeshLambertMaterial({
+      color: 0x912cee,
+      side: THREE.DoubleSide,
+    });
+    /*
+  let planeMaterial = new THREE.MeshLambertMaterial({
+    color: 0x545454,
+    transparent: true,
+    opacity: 0.6,
+    side: THREE.DoubleSide,
+  });
+
+  let planeGeometry = new THREE.PlaneGeometry(60, 30);
+  let plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.position.y += 40;
+  data.base3D.scene.add(plane);*/
+
+    // 生成二维字体模型
+    let shapes = font.generateShapes(text, 10, 1);
+    let fontGeometry = new THREE.ShapeGeometry(shapes);
+
+    // 绑定盒子模型
+    fontGeometry.computeBoundingBox();
+    let fonts = new THREE.Mesh(fontGeometry, fontMaterial);
+    // x = 0,位置
+    // fonts.position.x =
+    //   -0.5 * (fontGeometry.boundingBox.max.x - fontGeometry.boundingBox.min.x);
+    // fonts.position.z += 1;
+    fonts.position.set(-20, 40, 0);
+    data.base3D.scene.add(fonts);
+  });
 }
 </script>
 

@@ -57,6 +57,14 @@ const routes = [
     path: "/textGeometry",
     component: () => import("../components/textGeometry.vue"),
   },
+  {
+    path: "/curveTrack",
+    component: () => import("../components/curveTrack.vue"),
+  },
+  {
+    path: "/drawLine",
+    component: () => import("../components/drawLine.vue"),
+  },
 ];
 const router = createRouter({
   history: createWebHistory(),
