@@ -1,0 +1,2 @@
+import{ab as x,m as M,cx as c}from"./externalRenderers.e9b2a64d.js";function o(i,t,e,a=new x){let n;if(e.type==="2d")n=t*e.resolution;else if(e.type==="3d"){const y=e.overlayPixelSizeInMapUnits(i),s=e.basemapSpatialReference;n=M(s)&&!s.equals(e.spatialReference)?c(s)/c(e.spatialReference):t*y}const r=i.x-n,l=i.y-n,m=i.x+n,p=i.y+n,{spatialReference:f}=e;return a.xmin=Math.min(r,m),a.ymin=Math.min(l,p),a.xmax=Math.max(r,m),a.ymax=Math.max(l,p),a.spatialReference=f,a}new x;export{o as a};
+//# sourceMappingURL=drapedUtils.cf000b28.js.map

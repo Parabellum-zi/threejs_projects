@@ -1,0 +1,2 @@
+import"./externalRenderers.e9b2a64d.js";import{r as j}from"./SliceView3D.2500a685.js";import"./LineVisualElement.09142ed4.js";import"./BuildingComponentSublayer.5768c950.js";import"./capabilities.2e888fa1.js";import"./I3SIndexInfo.becbd491.js";import"./I3SLayerDefinitions.772a0235.js";import"./ImageMaterialTechnique.ca20af60.js";import"./persistable.7ed992b0.js";import"./multiOriginJSONSupportUtils.f4e66410.js";export{j as build};
+//# sourceMappingURL=SlicePlaneMaterial.glsl.37a24a6e.js.map
