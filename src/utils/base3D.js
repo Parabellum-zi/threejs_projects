@@ -30,6 +30,7 @@ class Base3D {
     this.camera = {};
     this.renderer = {};
     this.orbitControls = {};
+    this.firstControls = {};
     this.model = {};
     this.init();
   }
@@ -38,6 +39,7 @@ class Base3D {
     this.initCamera();
     this.initRenderer();
     this.initControls();
+    this.initFirstPersonControls();
     this.initLight();
     this.animation();
     this.initStats();
@@ -60,6 +62,7 @@ class Base3D {
       10000
     );
     this.camera.position.set(0, 200, 400);
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
   }
   initRenderer() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); //antialias 抗锯齿
@@ -85,18 +88,18 @@ class Base3D {
       this.camera,
       this.renderer.domElement
     );
+    this.orbitControls.listenToKeyEvents(window); // 将关键事件侦听器添加到给定的 DOM 元素
     this.orbitControls.enableDamping = true; // 惯性
     this.orbitControls.dampingFactor = 0.25; // 动态阻尼系数
     this.orbitControls.enableZoom = true; // 缩放
     this.orbitControls.enablePan = true; // 右键拖拽
-    this.orbitControls.minDistance = -10;
-    // this.orbitControls.maxDistance = 600;
-
+    this.orbitControls.minDistance = -50;
+    this.orbitControls.maxDistance = 800;
+    this.orbitControls.screenSpacePanning = false;
     // this.orbitControls.maxAzimuthAngle = Math.PI / 6; // 水平旋转范围
     // this.orbitControls.minAzimuthAngle = -Math.PI / 6;
-    // this.orbitControls.maxPolarAngle = Math.PI / 6; // 垂直旋转范围
+    this.orbitControls.maxPolarAngle = Math.PI / 2; // 垂直旋转范围
     // this.orbitControls.minPolarAngle = -Math.PI / 6;
-
     const axesHelper = new THREE.AxesHelper(200);
     this.scene.add(axesHelper);
   }
@@ -121,7 +124,6 @@ class Base3D {
     skyUniforms["mieCoefficient"].value = 0.005;
     skyUniforms["mieDirectionalG"].value = 0.8;
   }
-
   updateSun() {
     const parameters = {
       elevation: 18, // 日光高度
@@ -138,18 +140,19 @@ class Base3D {
    * 第一人称视角控制
    */
   initFirstPersonControls() {
-    this.orbitControls = new FirstPersonControls(
+    this.firstControls = new FirstPersonControls(
       this.camera,
       this.renderer.domElement
     );
-    this.orbitControls.lookSpeed = 0.1; //鼠标移动查看的速度
-    this.orbitControls.movementSpeed = 10; //相机移动速度
-    this.orbitControls.noFly = true;
-    this.orbitControls.constrainVertical = true; //约束垂直
-    this.orbitControls.verticalMin = 1.0;
-    this.orbitControls.verticalMax = 2.0;
-    this.orbitControls.lon = -100; //进入初始视角x轴的角度
-    this.orbitControls.lat = 0; //初始视角进入后y轴的角度
+    this.firstControls.lookSpeed = 100; //鼠标移动查看的速度
+    this.firstControls.movementSpeed = 1000; //相机移动速度
+    this.firstControls.noFly = true;
+    this.firstControls.constrainVertical = true; //约束垂直
+    this.firstControls.verticalMin = 1.0;
+    this.firstControls.verticalMax = 2.0;
+    // this.firstControls.lon = -100; //进入初始视角x轴的角度
+    // this.firstControls.lat = 0; //初始视角进入后y轴的角度
+    this.firstControls.enabled = false; // 默认不启用
   }
   setEvnMap(hdr) {
     new RGBELoader().setPath("images/hdr/").load(hdr + ".hdr", (texture) => {
@@ -170,6 +173,8 @@ class Base3D {
     document.body.appendChild(stats.dom);
   }
   animation() {
+    this.orbitControls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+
     this.renderer.setAnimationLoop(this.render.bind(this));
   }
   resize() {
@@ -219,6 +224,11 @@ class Base3D {
     }
     return result;
   }
+  /**
+   * 销毁
+   * @param seconds
+   * @returns {Promise<unknown>}
+   */
   dispose(seconds = 0) {
     return new Promise((resolve) =>
       setTimeout(() => {
@@ -233,6 +243,18 @@ class Base3D {
         resolve("dispose");
       }, seconds * 1000)
     );
+  }
+  /**
+   * 获取当前的控件target
+   */
+  getCurrentCtrlTarget() {
+    return this.orbitControls.target;
+  }
+  /**
+   * 获取当前的相机位置
+   */
+  getCurrentCamera() {
+    return this.camera.position;
   }
 }
 export default Base3D;
