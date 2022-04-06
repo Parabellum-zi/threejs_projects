@@ -14,6 +14,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import ResourceTracker from "./ResourceTracker";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { Sky } from "three/examples/jsm/objects/Sky";
+import TWEEN from "@tweenjs/tween.js";
 
 let stats;
 let resMgr = new ResourceTracker();
@@ -164,6 +165,8 @@ class Base3D {
   render() {
     this.renderer.clear();
     stats.update();
+    TWEEN.update(); //动画帧更新配合requestAnimationFrame
+
     this.renderer.render(this.scene, this.camera);
   }
   //初始化性能插件
@@ -255,6 +258,50 @@ class Base3D {
    */
   getCurrentCamera() {
     return this.camera.position;
+  }
+  /**
+   * desc: 间补动画
+   * oldP 相机原位置  (camera.position)
+   * oldT 原control target
+   * newP 相机新位置  (control.target)
+   * newT 新control target
+   */
+  tweenAnimation(oldP, oldT, newP, newT) {
+    let tween = new TWEEN.Tween({
+      x1: oldP.x,
+      y1: oldP.y,
+      z1: oldP.z,
+      x2: oldT.x,
+      y2: oldT.y,
+      z2: oldT.z,
+    });
+    tween.to(
+      {
+        x1: newP.x,
+        y1: newP.y,
+        z1: newP.z,
+        x2: newT.x,
+        y2: newT.y,
+        z2: newT.z,
+      },
+      1000 * 1.5
+    );
+    tween.onUpdate((object) => {
+      //在 tween 动画每次更新后执行
+      this.camera.position.x = object.x1;
+      this.camera.position.y = object.y1;
+      this.camera.position.z = object.z1;
+      this.orbitControls.target.x = object.x2;
+      this.orbitControls.target.y = object.y2;
+      this.orbitControls.target.z = object.z2;
+      this.orbitControls.update();
+    });
+    tween.onComplete(() => {
+      //在 tween 动画全部结束后执行
+      this.orbitControls.enabled = true;
+    });
+    tween.easing(TWEEN.Easing.Cubic.InOut);
+    tween.start(); // tween 动画开始前的回调函数
   }
 }
 export default Base3D;

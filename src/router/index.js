@@ -65,6 +65,10 @@ const routes = [
     path: "/drawLine",
     component: () => import("../components/drawLine.vue"),
   },
+  {
+    path: "/controlChange",
+    component: () => import("../components/controlChange.vue"),
+  },
 ];
 const router = createRouter({
   history: createWebHistory(),

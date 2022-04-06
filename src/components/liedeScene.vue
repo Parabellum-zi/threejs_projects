@@ -8,11 +8,21 @@
       标签<span class="highlight">{{ state.renderPass ? "开" : "关" }}</span>
     </button>
     <div class="phaseOf">
-      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('1')">一期</button>
-      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('2')">二期</button>
-      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('3')">三期</button>
-      <button class="phaseOf_c" @click.stop="cameraToPhaseOf('4')">四期</button>
+      <button class="phaseOf_c" @click.stop="jumpToTarget(0)">一期</button>
+      <button class="phaseOf_c" @click.stop="jumpToTarget(1)">二期</button>
+      <button class="phaseOf_c" @click.stop="jumpToTarget(2)">三期</button>
+      <button class="phaseOf_c" @click.stop="jumpToTarget(3)">四期</button>
     </div>
+    <button
+      class="pass_button"
+      style="top: 236px"
+      @click.stop="() => (state.firstPersonControl = !state.firstPersonControl)"
+    >
+      第一人称视角
+      <span class="highlight">{{
+        state.firstPersonControl ? "开" : "关"
+      }}</span>
+    </button>
   </div>
 </template>
 
@@ -28,7 +38,9 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import * as dat from "dat.gui";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
-import TWEEN from "tween/tween.js";
+
+import TWEEN from "@tweenjs/tween.js";
+
 // const clock = new THREE.Clock();
 let params; // GUI config
 let data = reactive({
@@ -549,7 +561,54 @@ spriteGroup.name = "labels_2d";
 let state = reactive({
   backgroundColor: "#3cd4cf",
   renderPass: true,
+  firstPersonControl: false,
 });
+let orbit;
+let first_controls;
+let cameraLocations = [
+  {
+    x: -299.9296644186333,
+    y: 175.31136861712542,
+    z: 257.3866588389222,
+  },
+  {
+    x: -259.43963297633354,
+    y: 194.86606425459377,
+    z: 21.568699126278887,
+  },
+  {
+    x: -510.1725026842701,
+    y: 157.9204396191062,
+    z: -7.941532670921576,
+  },
+  {
+    x: 59.611937566801956,
+    y: 141.06905979681704,
+    z: 108.33866058877214,
+  },
+]; // 污水厂
+let targetLocations = [
+  {
+    x: -296.29997695526777,
+    y: -2.992567232844881,
+    z: -40.942248996347054,
+  },
+  {
+    x: -256.22185416958445,
+    y: -2.476203241471992e-15,
+    z: -202.1324332620674,
+  },
+  {
+    x: -450.6937558647732,
+    y: -5.4438868046524034e-15,
+    z: -6.341002582100552,
+  },
+  {
+    x: 60.10470484298909,
+    y: -2.0956385637195345e-15,
+    z: 32.16971113117626,
+  },
+];
 
 onMounted(() => {
   initScene();
@@ -570,17 +629,24 @@ onBeforeUnmount(() => {
     console.error(e);
   }
 });
-watch(
-  () => state.renderPass,
-  (n) => labelsGroupStatus(n)
-);
+watch([() => state.renderPass, () => state.firstPersonControl], (n) => {
+  labelsGroupStatus(n[0]);
+  firstControlHandel(n[1]);
+});
 
 function initScene() {
   data.base3D = new Base3D(sceneContainer.value);
+  orbit = data.base3D.orbitControls;
+  orbit.update();
+  orbit.addEventListener("change", render);
+  first_controls = data.base3D.firstControls;
+
   threeUniversal.addFloor(data.base3D.scene);
-  // document.addEventListener("mousedown", onDocumentMouseDown);
+
   document.addEventListener("mousedown", onPointerClick);
+
   loadLiedeModel("liede.gltf"); // 污水厂模型
+
   data.base3D.scene.add(spriteGroup);
 
   // allPipeline();
@@ -619,7 +685,7 @@ function loadTubes() {
 }
 
 function loadLiedeModel(model) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const loader = new GLTFLoader();
     loader.load(
       "static/model/" + model,
@@ -641,7 +707,9 @@ function loadLiedeModel(model) {
     // loadLabels(); // 标注
     // loadTubes(); // 管线
     // loadWaterSurface(); // 水面
-    labels3d.slice(0, 3).map((item) => createText(item)); // 3D fonts label
+    // labels3d.slice(0, 3).map((item) => createText(item)); // 3D fonts label
+    // first_controls = data.base3D.firstControls;
+    // first_controls.update();
   });
 }
 /**
@@ -748,6 +816,7 @@ function createPath(pointsArr) {
 }*/
 
 function animate(time) {
+  let clock = new THREE.Clock();
   time *= 0.003;
   // 水流
   Object.keys(allTubes).forEach((item) => {
@@ -760,8 +829,12 @@ function animate(time) {
       (waterSurface_A[item].material.uniforms["time"].value += 1.0 / 660.0)
   );
   // modelChange(time);  // 转盘旋转动画
+  if (state.firstPersonControl) first_controls.update(clock.getDelta());
   requestAnimationFrame(animate);
   // render();
+}
+function render() {
+  // TWEEN.update(); //动画帧更新配合requestAnimationFrame
 }
 
 /**
@@ -1222,24 +1295,6 @@ function onPointerClick(event) {
 }
 
 /**
- *使用 Tween.js 作为间补动画
- */
-function cameraToPhaseOf(item) {
-  switch (item) {
-    case "1":
-      break;
-    case "2":
-      break;
-    case "3":
-      break;
-    case "4":
-      break;
-    default:
-      break;
-  }
-}
-
-/**
  * 原生中文无法显示 使用https://gero3.github.io/facetype.js/ 将.tff 格式的文字转为 .json 格式
  */
 function createText(options) {
@@ -1273,6 +1328,23 @@ function createText(options) {
     fonts.position.set(x - 18, y, z);
     data.base3D.scene.add(fonts);
   });
+}
+
+function firstControlHandel(n) {
+  console.log("............", n);
+  orbit.enabled = !n;
+  first_controls.enabled = n;
+  // console.log(data.base3D.firstControls);
+}
+
+function jumpToTarget(i) {
+  console.log(i);
+  data.base3D.tweenAnimation(
+    data.base3D.getCurrentCamera(),
+    data.base3D.getCurrentCtrlTarget(),
+    cameraLocations[i],
+    targetLocations[i]
+  );
 }
 </script>
 
