@@ -165,11 +165,9 @@ class Base3D {
   render() {
     this.renderer.clear();
     stats.update();
-    TWEEN.update(); //动画帧更新配合requestAnimationFrame
-
+    TWEEN.update(); // 间补动画更新帧
     this.renderer.render(this.scene, this.camera);
   }
-  //初始化性能插件
   initStats() {
     stats = new Stats();
     stats.showPanel(0);
@@ -177,7 +175,6 @@ class Base3D {
   }
   animation() {
     this.orbitControls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-
     this.renderer.setAnimationLoop(this.render.bind(this));
   }
   resize() {
@@ -260,7 +257,7 @@ class Base3D {
     return this.camera.position;
   }
   /**
-   * desc: 间补动画
+   * desc: 间补动画(视点间)
    * oldP 相机原位置  (camera.position)
    * oldT 原control target
    * newP 相机新位置  (control.target)
@@ -301,7 +298,7 @@ class Base3D {
       this.orbitControls.enabled = true;
     });
     tween.easing(TWEEN.Easing.Cubic.InOut);
-    tween.start(); // tween 动画开始前的回调函数
+    tween.start(); // tween 动画开始前的回调函数(动画开始第一帧)
   }
 }
 export default Base3D;
