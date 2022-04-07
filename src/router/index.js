@@ -62,12 +62,12 @@ const routes = [
     component: () => import("../components/curveTrack.vue"),
   },
   {
-    path: "/drawLine",
-    component: () => import("../components/drawLine.vue"),
-  },
-  {
     path: "/controlChange",
     component: () => import("../components/controlChange.vue"),
+  },
+  {
+    path: "/cruise",
+    component: () => import("../components/cruise.vue"),
   },
 ];
 const router = createRouter({
