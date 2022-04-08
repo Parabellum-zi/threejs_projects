@@ -66,8 +66,8 @@ const routes = [
     component: () => import("../components/controlChange.vue"),
   },
   {
-    path: "/cruise",
-    component: () => import("../components/cruise.vue"),
+    path: "/roaming",
+    component: () => import("../components/roaming.vue"),
   },
 ];
 const router = createRouter({
