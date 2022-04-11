@@ -300,5 +300,25 @@ class Base3D {
     tween.easing(TWEEN.Easing.Cubic.InOut);
     tween.start(); // tween 动画开始前的回调函数(动画开始第一帧)
   }
+  /**
+   * 基于 tween js 位置移动动画
+   * mesh 网格模型
+   * positionTo 位置数组
+   */
+  boxMove(mesh, positionTo) {
+    if (positionTo.length <= 1) return;
+    let { x, y, z } = positionTo[1];
+    new TWEEN.Tween(mesh.position)
+      .to({ x, y, z }, 3000)
+      .easing(TWEEN.Easing.Linear.None)
+      .onUpdate(() => {})
+      .onComplete(() => {
+        mesh.position.set(x, y, z);
+        positionTo.shift();
+        // console.log(this.positionTo);
+        this.boxMove(mesh, positionTo);
+      })
+      .start();
+  }
 }
 export default Base3D;
